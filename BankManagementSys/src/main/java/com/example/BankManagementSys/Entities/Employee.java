@@ -1,8 +1,9 @@
+
+
 package com.example.BankManagementSys.Entities;
 
-import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Table;
 import lombok.Data;
 import jakarta.persistence.Column;
@@ -10,11 +11,12 @@ import java.util.Date;
 
 @Entity
 
-@DiscriminatorValue("CUSTOMER")
+@DiscriminatorValue("EMPLOYEE")
 @Data
-public class Customer extends User {
+public class Employee extends User {
 
-    @Column(name = "joining_date")
-    private Date joinDate;
+    @Column(name = "work_start date")
+    private Date startDate;
+
 
 }
