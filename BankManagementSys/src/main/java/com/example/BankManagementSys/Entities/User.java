@@ -5,37 +5,42 @@ import lombok.*;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
+import java.util.UUID;
 
-
-@DiscriminatorColumn(name = "user_type", discriminatorType = DiscriminatorType.STRING) // To
-@MappedSuperclass
+ // Table-per-class inheritance strategy
 @Data
+@MappedSuperclass
 public class User implements Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // should be edited to unique string
-    private int idCode;
 
-    @Column(name = "first_name")
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)  // Use AUTO for ID generation (or you can use UUID)
+    private String idCode;  // Unique ID (can be UUID or string format)
+
+    @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @Column(name = "last_name")
+    @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @Column(name = "idNumber")
+    @Column(name = "idNumber", nullable = false)
     private int idNumber;
 
-    @Column(name = "email")
+    @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "password")
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "address")
+    @Column(name = "address", nullable = false)
     private String address;
 
-    @Column(name = "birthdate")
+    @Column(name = "birthdate", nullable = false)
     private Date birthdate;
 
-
+    @PrePersist
+    public void onPrePersist() {
+        if (this.idCode == null) {
+            this.idCode = UUID.randomUUID().toString();  // Generate UUID if idCode is not set
+        }
+    }
 }
