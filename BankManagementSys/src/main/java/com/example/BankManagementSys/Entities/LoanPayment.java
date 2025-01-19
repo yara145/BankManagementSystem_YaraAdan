@@ -14,7 +14,7 @@ public class LoanPayment {
     @Column(name = "payment_amount")
     private double paymentAmount;
 
-    @Column(name = "payment_datw")
+    @Column(name = "payment_date")
     private Date paymentDate;
 
     @ManyToOne

@@ -22,6 +22,9 @@ public class Transaction implements Serializable{
     @Column(name = "description")
     private String descriptipn;
 
+    @JoinColumn(name = "bankaccount_id")
+    @ManyToOne()
+    private BankAccount bankAccount;
 
 
 }

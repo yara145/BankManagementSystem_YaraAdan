@@ -1,6 +1,6 @@
 package com.example.BankManagementSys.Enums;
 
-public enum Status {
+public enum BankAccountStatus {
     ACTIVE,
     SUSPENDED,
     CLOSED

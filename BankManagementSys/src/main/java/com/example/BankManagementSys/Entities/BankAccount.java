@@ -1,6 +1,7 @@
 package com.example.BankManagementSys.Entities;
 
-import com.example.BankManagementSys.Enums.Status;
+import com.example.BankManagementSys.Enums.BankAccountStatus;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -34,7 +35,7 @@ public class BankAccount implements Serializable {
 
     @Enumerated(EnumType.STRING)  // This stores the enum as a string in the database
     @Column(name = "status", nullable = false)
-    private Status status;
+    private BankAccountStatus status;
 
     @JoinColumn(name = "branch_id")
     @ManyToOne()
@@ -46,4 +47,9 @@ public class BankAccount implements Serializable {
 
     @ManyToMany(mappedBy = "bankAccounts")
     private List<Employee> employees;
+
+
+    @OneToMany(mappedBy = "bankAccount")
+    private List<Transaction> transactions;
+
 }
