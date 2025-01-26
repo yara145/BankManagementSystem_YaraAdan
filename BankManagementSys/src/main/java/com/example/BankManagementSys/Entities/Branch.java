@@ -2,6 +2,7 @@ package com.example.BankManagementSys.Entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.List;
@@ -23,7 +24,7 @@ public class Branch implements Serializable {
     @JoinColumn(name = "bank_id")
     @ManyToOne()
     private Bank bank;
-
+    @ToString.Exclude
     @OneToMany(mappedBy = "branch")
     private List<BankAccount> bankAccounts;
 

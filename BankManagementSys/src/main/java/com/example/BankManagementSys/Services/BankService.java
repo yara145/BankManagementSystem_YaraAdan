@@ -5,6 +5,7 @@ import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Branch;
 import com.example.BankManagementSys.Entities.Customer;
 import com.example.BankManagementSys.Reposityories.BankRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ public class BankService {
         if (bank.getName() == null || bank.getName().isEmpty()) {
             throw new IllegalArgumentException("Bank name cannot be null or empty.");
         }
-
+        System.out.println("***bank created successfully***");
         return bankRepository.save(bank);
     }
 
@@ -62,6 +63,7 @@ public class BankService {
     }
 
     //__________________________________BranchToBank______________________
+    @Transactional
     public void addBranchToBank(int bankId, Branch branch) {
         Optional<Bank> bankOptional = this.bankRepository.findById(bankId);
         if(bankOptional.isEmpty())

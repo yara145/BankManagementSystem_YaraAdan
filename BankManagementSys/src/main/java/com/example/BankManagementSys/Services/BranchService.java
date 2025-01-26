@@ -2,6 +2,7 @@ package com.example.BankManagementSys.Services;
 
 import com.example.BankManagementSys.Entities.*;
 import com.example.BankManagementSys.Reposityories.BranchRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +52,7 @@ public class BranchService {
     }
 
     // __________________________________ BANK ACCOUNT TO BRANCH __________________________________
-
+   @Transactional
     public void addBankAccountToBranch(Integer branchId, BankAccount bankAccount) {
         Optional<Branch> branchOptional = branchRepository.findById(branchId);
         if (branchOptional.isEmpty()) {

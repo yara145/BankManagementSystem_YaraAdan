@@ -4,6 +4,7 @@ import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Branch;
 import com.example.BankManagementSys.Entities.Employee;
 import com.example.BankManagementSys.Reposityories.EmployeeRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -69,6 +70,7 @@ public class EmployeeService {
     }
 
     // _________________________BranchToEmployee_________________________
+    @Transactional
     public void addBranchToEmployee(Long employeeId, Branch branch) {
         Employee employee = getEmployeeById(employeeId);
 
