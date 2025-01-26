@@ -5,6 +5,7 @@ import com.example.BankManagementSys.Enums.BankAccountStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -52,6 +53,7 @@ public class BankAccount implements Serializable {
 
 
     @OneToMany(mappedBy = "bankAccount")
+    @ToString.Exclude
     private List<Transaction> transactions;
 
 }

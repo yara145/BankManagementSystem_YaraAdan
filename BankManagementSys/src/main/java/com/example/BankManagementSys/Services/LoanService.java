@@ -2,6 +2,7 @@ package com.example.BankManagementSys.Services;
 
 import com.example.BankManagementSys.Entities.Transaction;
 import com.example.BankManagementSys.Entities.Loan;
+import com.example.BankManagementSys.Entities.WithdrawalTransaction;
 import com.example.BankManagementSys.Exceptions.TransactiomAlreadyExistsException;
 import com.example.BankManagementSys.Reposityories.LoanRepository;
 import com.example.BankManagementSys.Reposityories.TransferTransactionRepoistory;
@@ -69,6 +70,16 @@ public class LoanService {
     // Get all Transfers
     public List<Loan> getAllLoans () {
         return loanRepoistory.findAll();
+    }
+
+
+    public Loan connectLoanToBank(Loan loan, int bankAccountId) {
+        // Connect the transfer to the bank account
+        transactionService.connectTransactionToBankAccount(loan, bankAccountId);
+
+
+        // Save and return the transaction
+        return loanRepoistory.save(loan);
     }
 
 }

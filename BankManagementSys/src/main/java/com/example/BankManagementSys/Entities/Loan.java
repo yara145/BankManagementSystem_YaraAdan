@@ -14,8 +14,8 @@ import java.util.List;
 
 public class Loan extends Transaction  {
 
-    @Column(name = "loan_num")
-    private String loanNum;
+    @Column(name = "loan_name")
+    private String loanName;
 
     @Column(name = "start_payment_date")
     private Date startPaymentDate;

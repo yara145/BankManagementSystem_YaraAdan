@@ -83,11 +83,7 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		bankAccount.setType("personal");
 		bankAccountService.createNewBankAccount(bankAccount);
 
-
 		customerService.addBankAccountToCustomer(customer.getIdCode(),bankAccount);
-
-
-
 
 		Bank bank=new Bank();
 		bank.setName("MyBank");
@@ -142,8 +138,8 @@ public class BankManagementSysApplication implements CommandLineRunner {
 
 
 
-		System.out.println("********************************************************\n" );
-		System.out.println("TRANSACTIONS");
+		System.out.println("*************************TRANSACTIONS*******************************\n" );
+
 		System.out.println("\n");
 		System.out.println("\n");
 		TransferTransaction transfer = new TransferTransaction();
@@ -156,20 +152,16 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		transfer.setTransferDate(new Date());
 		transfer.setTransferName("Transfer to Yara Ghaben");
 
-
-
+//** Transfer *****
 		System.out.println("Lets add transfer :   " + transfer);
 		this.transferService.addNewTransferTransaction(transfer);
 
-		System.out.println("print all transactions \n");
-		List<Transaction> allTransactions = this.transactionService.getAllTransactions();
-		System.out.println(allTransactions);
 		System.out.println("print bank account that did the transfer \n");
 		System.out.println(transfer.getTransactionId());
 		System.out.println(transfer.getBankAccount());
 
 
-		System.out.println("************update!!!!!!! transfer amount \n");
+		System.out.println("************ update transfer amount \n");
 		transfer.setAmount(90);
 //		System.out.println(this.transferService.updateTransferTransaction(transfer));
 //		System.out.println(transfer);
@@ -202,35 +194,30 @@ public class BankManagementSysApplication implements CommandLineRunner {
 
 
 		System.out.println("*********** withdrawal **********");
-//		System.out.println("delete transfer\n");
-//	this.transferService.deleteTransferTransaction(transfer.getTransactionId());
-//		System.out.println("lets print all transactions \n");
-//
-//
-//		System.out.println(this.transactionService.getAllTransactions());
+		WithdrawalTransaction withdrawal = new WithdrawalTransaction();
+		withdrawal.setWithdrawalAmount(455);
+		System.out.println(withdrawalService.addNewWithdrawalTransaction(withdrawal));
+		System.out.println(this.withdrawalService.	connectTransactionToBank(withdrawal,1));
 
 
-//		System.out.println("*****************second transferr*********************** \n");
-//		TransferTransaction transfer2 = new TransferTransaction();
-//		transfer2.setAmount(500);
-//		transfer2.setDescription("This is my first transfer");
-//		transfer2.setTransferAccountNum(112);
-//		transfer2.setTransferBranchCode(2009);
-//		transfer2.setTransferBankCode(632);
-//		transfer2.setTransferStatus(TransferStatus.PENDING);
-//		transfer2.setTransferDate(new Date());
-//		transfer2.setTransferName("Transfer to Yara Ghaben");
+		System.out.println("*********** Loan **********");
+		Loan loan = new Loan();
+		loan.setEndPaymentDate(new Date());
+		loan.setInterestRate(0.3);
+		loan.setLoanAmount(12000);
+		loan.setStartPaymentDate(new Date());
+		System.out.println(loanService.addNewLoan(loan));
+		System.out.println(this.loanService.connectLoanToBank(loan,1));
+
+//		System.out.println("*********** Loan Payment **********");
+//		LoanPayment loanPayment = new LoanPayment();
+//		loanPayment.setPaymentAmount(222);
+//		loanPayment.setPaymentDate(new Date());
 //
-//		System.out.println("Lets add transfer :   " + transfer2);
-//		this.transferService.addNewTransferTransaction(transfer2);
-//
+//		System.out.println(this.loanPaymentService.addLoanPayment(loanPayment, 1));
 //		System.out.println("print all transactions \n");
-//		List<Transaction> allTransactions2 = this.transactionService.getAllTransactions();
+//		List<Transaction> allTransactions = this.transactionService.getAllTransactions();
 //		System.out.println(allTransactions);
-//		System.out.println("print bank account that did the transfer \n");
-//		System.out.println(transfer2.getTransactionId());
-//		System.out.println(transfer2.getBankAccount());
-
 
 
 

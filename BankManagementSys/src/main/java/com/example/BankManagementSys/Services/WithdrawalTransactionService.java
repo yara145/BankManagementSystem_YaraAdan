@@ -2,7 +2,9 @@ package com.example.BankManagementSys.Services;
 
 import com.example.BankManagementSys.Entities.DepositTransaction;
 import com.example.BankManagementSys.Entities.Transaction;
+import com.example.BankManagementSys.Entities.TransferTransaction;
 import com.example.BankManagementSys.Entities.WithdrawalTransaction;
+import com.example.BankManagementSys.Enums.TransferStatus;
 import com.example.BankManagementSys.Exceptions.TransactiomAlreadyExistsException;
 import com.example.BankManagementSys.Reposityories.DepositTransactionRepository;
 import com.example.BankManagementSys.Reposityories.WithdrawalTransactionRepository;
@@ -72,5 +74,15 @@ public class WithdrawalTransactionService {
     public List<WithdrawalTransaction> getAllWithdrawals() {
         return withdrawalRepoistory.findAll();
 
+    }
+
+
+    public WithdrawalTransaction connectTransactionToBank(WithdrawalTransaction withdrawal, int bankAccountId) {
+        // Connect the transfer to the bank account
+        transactionService.connectTransactionToBankAccount(withdrawal, bankAccountId);
+
+
+        // Save and return the transaction
+        return withdrawalRepoistory.save(withdrawal);
     }
 }
