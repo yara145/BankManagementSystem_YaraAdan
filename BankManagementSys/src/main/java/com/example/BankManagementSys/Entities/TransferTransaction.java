@@ -14,20 +14,20 @@ import java.util.List;
 
 public class TransferTransaction extends Transaction  {
 
-    @Column(name = "name")
-    private String name;
+    @Column(name = "transfer_name")
+    private String transferName;
 
-    @Column(name = "account_number")
-    private String accountNumber;
+    @Column(name = "transfer_account_num")
+    private int transferAccountNum;
 
     @Column(name = "amount")
     private double amount;
 
     @Column(name = "bank_code")
-    private int bankCode;
+    private int transferBankCode;
 
     @Column(name = "branch_code")
-    private int branchCode;
+    private int transferBranchCode;
 
     @Column(name = "transfer_date")
     private Date transferDate;
@@ -35,4 +35,6 @@ public class TransferTransaction extends Transaction  {
     @Enumerated(EnumType.STRING)  // This stores the enum as a string in the database
     @Column(name = "transfer_status", nullable = false)
     private TransferStatus transferStatus;
+
+
 }

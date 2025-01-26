@@ -14,6 +14,6 @@ import java.util.List;
 
 public class WithdrawalTransaction extends Transaction{
 
-    @Column(name = "desposit_amount")
-    private double despositAmount;
+    @Column(name = "withdrawal_amount")
+    private double withdrawalAmount;
 }

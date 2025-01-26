@@ -9,7 +9,9 @@ import java.util.Date;
 public class LoanPayment {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int paymentNumber;
+
 
     @Column(name = "payment_amount")
     private double paymentAmount;

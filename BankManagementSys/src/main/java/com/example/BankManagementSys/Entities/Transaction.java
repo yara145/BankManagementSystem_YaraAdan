@@ -20,7 +20,7 @@ public class Transaction implements Serializable{
 
 
     @Column(name = "description")
-    private String descriptipn;
+    private String description;
 
     @JoinColumn(name = "bankaccount_id")
     @ManyToOne()
