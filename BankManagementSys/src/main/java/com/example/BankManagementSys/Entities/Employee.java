@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-@Table(name = "employees")  // Table name for Employee entity
+@Table(name = "employees") // Table for Employee entity
 @Data
 public class Employee extends User {
 
@@ -16,18 +16,17 @@ public class Employee extends User {
 
     @ManyToMany
     @JoinTable(
-            name = "employee_bankaccounts", // Join table name
-            joinColumns = @JoinColumn(name = "employee_id"), // Column for this entity
-            inverseJoinColumns = @JoinColumn(name = "bankaccount_id") // Column for the other entity
+            name = "employee_bankaccounts", // Join table
+            joinColumns = @JoinColumn(name = "employee_id"), // Employee ID
+            inverseJoinColumns = @JoinColumn(name = "bankaccount_id") // Bank account ID
     )
     private List<BankAccount> bankAccounts;
 
     @ManyToMany
     @JoinTable(
-            name = "employees_branches", // Join table name
-            joinColumns = @JoinColumn(name = "employee_id"), // Column for this entity
-            inverseJoinColumns = @JoinColumn(name = "branch_id") // Column for the other entity
+            name = "employees_branches", // Join table
+            joinColumns = @JoinColumn(name = "employee_id"), // Employee ID
+            inverseJoinColumns = @JoinColumn(name = "branch_id") // Branch ID
     )
     private List<Branch> branches;
-
 }

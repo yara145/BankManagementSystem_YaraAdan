@@ -6,15 +6,16 @@ import lombok.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
-
- // Table-per-class inheritance strategy
 @Data
 @MappedSuperclass
 public class User implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)  // Use AUTO for ID generation (or you can use UUID)
-    private String idCode;  // Unique ID (can be UUID or string format)
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-increment ID
+    private Long idCode;  // Numeric auto-incrementing ID
+
+    @Column(name = "user_name", nullable = false, updatable = false)
+    private String userName;
 
     @Column(name = "first_name", nullable = false)
     private String firstName;
@@ -22,8 +23,8 @@ public class User implements Serializable {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @Column(name = "idNumber", nullable = false)
-    private int idNumber;
+    @Column(name = "id_number", nullable = false, updatable = false)
+    private String idNumber;
 
     @Column(name = "email", nullable = false)
     private String email;
@@ -34,13 +35,6 @@ public class User implements Serializable {
     @Column(name = "address", nullable = false)
     private String address;
 
-    @Column(name = "birthdate", nullable = false)
+    @Column(name = "birthdate", nullable = false, updatable = false)
     private Date birthdate;
-
-    @PrePersist
-    public void onPrePersist() {
-        if (this.idCode == null) {
-            this.idCode = UUID.randomUUID().toString();  // Generate UUID if idCode is not set
-        }
-    }
 }

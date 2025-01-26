@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-@Table(name = "customers")  // Table name for Customer entity
+@Table(name = "customers") // Table for Customer entity
 @Data
 public class Customer extends User {
 
@@ -19,3 +19,4 @@ public class Customer extends User {
     @OneToMany(mappedBy = "customer")
     private List<BankAccount> bankAccounts;
 }
+

@@ -4,6 +4,7 @@ import com.example.BankManagementSys.Enums.BankAccountStatus;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -13,6 +14,7 @@ import java.util.List;
 @Entity
 @Table(name="bank_accounts")
 @Data
+@Getter
 public class BankAccount implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,11 +32,11 @@ public class BankAccount implements Serializable {
     @Column(name = "account_type", nullable = false)
     private String type;
 
-    @Column(name = "balance", nullable = false)
+    @Column(name = "balance")//it can be null at first
     private BigDecimal balance;
 
     @Enumerated(EnumType.STRING)  // This stores the enum as a string in the database
-    @Column(name = "status", nullable = false)
+    @Column(name = "status")
     private BankAccountStatus status;
 
     @JoinColumn(name = "branch_id")
