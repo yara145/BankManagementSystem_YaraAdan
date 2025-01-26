@@ -181,7 +181,8 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		DepositTransaction deposit = new DepositTransaction();
 		deposit.setDespositAmount(344);
 		System.out.println(	depositService.addNewDepositTransaction(deposit));
-
+		System.out.println("Connect deposit to the bank account \n");
+		System.out.println(this.depositService.	connectTransactionToBank(deposit,1));
 
 
 		DepositTransaction deposit2 = new DepositTransaction();
