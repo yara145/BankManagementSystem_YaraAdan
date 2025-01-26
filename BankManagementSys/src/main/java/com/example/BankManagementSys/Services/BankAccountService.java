@@ -36,6 +36,7 @@ public class BankAccountService {
         if (account.getCreatedDate() == null) {
             account.setCreatedDate(LocalDateTime.now()); // Default creation date is now
         }
+        System.out.println("******************bank account created successfully************");
         return bankAccountRepository.save(account);
     }
 

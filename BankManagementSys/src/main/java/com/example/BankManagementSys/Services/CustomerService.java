@@ -5,10 +5,12 @@ import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Customer;
 import com.example.BankManagementSys.Enums.BankAccountStatus;
 import com.example.BankManagementSys.Reposityories.CustomerRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,8 +35,9 @@ public class CustomerService {
         if (age < minCustomerAge) {
             throw new IllegalArgumentException("Customer's age is below the minimum required: " + minCustomerAge);
         }
-
-
+        // Set the join date to today
+        customer.setJoinDate(new Date());
+        System.out.println("******************Customer created successfully************");
         //  Save the new customer
         return this.customerRepository.save(customer);
     }
@@ -60,6 +63,7 @@ public class CustomerService {
         customerRepository.deleteById(customerId);
     }
     //________________________________Bank Account to customer___________________
+    @Transactional
     public void addBankAccountToCustomer(Long customerId, BankAccount bankAccount) {
         Optional<Customer> customerOptional = this.customerRepository.findById(customerId);
         if(customerOptional.isEmpty())
@@ -70,6 +74,7 @@ public class CustomerService {
         bankAccountService.updateBankAccount(bankAccount);
         customerOptional.get().getBankAccounts().add(bankAccount);
         System.out.println(customerOptional.get().getBankAccounts());
+        System.out.println("****BankAccount Has Been added to customer****");
     }
     public List<BankAccount> getBankAccountsForCustomer(Long customerId) {//*gettings bankaccounts for the customer
         Customer customer = customerRepository.findById(customerId)
