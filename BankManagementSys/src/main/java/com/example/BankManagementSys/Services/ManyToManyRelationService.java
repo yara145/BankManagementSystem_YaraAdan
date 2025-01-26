@@ -16,22 +16,33 @@ public class ManyToManyRelationService {
     private BankAccountService bankAccountService;
     @Autowired
     private BranchService branchService;
+
+
     public void addEmployeeToBankAccount(Long employeeId, int bankAccountId) {
         BankAccount bankAccount = bankAccountService.getBankAccountById(bankAccountId);
         Employee employee = employeeService.getEmployeeById(employeeId);
 
-        // Delegate to EmployeeService to add the BankAccount to the Employee
-        employeeService.addBankAccountToEmployee(employeeId, bankAccount);
-        System.out.println("Employee " + employeeId + " added to BankAccount " + bankAccountId);
+        if (!bankAccount.getEmployees().contains(employee)) {
+            bankAccount.getEmployees().add(employee);
+        }
+
+        if (!employee.getBankAccounts().contains(bankAccount)) {
+            employee.getBankAccounts().add(bankAccount);
+        }
+
+        bankAccountService.updateBankAccount(bankAccount);
+        employeeService.updateEmployee(employee);
     }
 
     public void removeEmployeeFromBankAccount(Long employeeId, int bankAccountId) {
         BankAccount bankAccount = bankAccountService.getBankAccountById(bankAccountId);
         Employee employee = employeeService.getEmployeeById(employeeId);
 
-        // Delegate to EmployeeService to remove the BankAccount from the Employee
-        employeeService.removeBankAccountFromEmployee(employeeId, bankAccount);
-        System.out.println("Employee " + employeeId + " removed from BankAccount " + bankAccountId);
+        bankAccount.getEmployees().remove(employee);
+        employee.getBankAccounts().remove(bankAccount);
+
+        bankAccountService.updateBankAccount(bankAccount);
+        employeeService.updateEmployee(employee);
     }
     public void addEmployeeToBranch(Long employeeId, int branchId) {
         Branch branch = branchService.getBranchById(branchId);

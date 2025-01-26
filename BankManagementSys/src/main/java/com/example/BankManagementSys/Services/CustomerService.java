@@ -67,7 +67,7 @@ public class CustomerService {
             throw new IllegalArgumentException("Customer not found.");
         }
        bankAccount.setCustomer(customerOptional.get());
-        bankAccountService.UpdateBankAccount(bankAccount);
+        bankAccountService.updateBankAccount(bankAccount);
         customerOptional.get().getBankAccounts().add(bankAccount);
         System.out.println(customerOptional.get().getBankAccounts());
     }

@@ -1,20 +1,22 @@
 package com.example.BankManagementSys.Entities;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.UUID;
+
 @Data
-@MappedSuperclass
-public class User implements Serializable {
+@Entity
+@Table(name = "users") // Defines the shared parent table
+@Inheritance(strategy = InheritanceType.JOINED) // Normalized strategy
+public abstract class User implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-increment ID
-    private Long idCode;  // Numeric auto-incrementing ID
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long idCode;
 
-    @Column(name = "user_name", nullable = false, updatable = false)
+    @Column(name = "user_name", nullable = false, unique = true)
     private String userName;
 
     @Column(name = "first_name", nullable = false)
@@ -23,10 +25,10 @@ public class User implements Serializable {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @Column(name = "id_number", nullable = false, updatable = false)
+    @Column(name = "id_number", nullable = false, unique = true)
     private String idNumber;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @Column(name = "password", nullable = false)
@@ -35,6 +37,6 @@ public class User implements Serializable {
     @Column(name = "address", nullable = false)
     private String address;
 
-    @Column(name = "birthdate", nullable = false, updatable = false)
+    @Column(name = "birthdate", nullable = false)
     private Date birthdate;
 }
