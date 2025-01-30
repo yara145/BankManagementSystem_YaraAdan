@@ -5,16 +5,23 @@ import com.example.BankManagementSys.Entities.Transaction;
 import com.example.BankManagementSys.Entities.TransferTransaction;
 import com.example.BankManagementSys.Entities.WithdrawalTransaction;
 import com.example.BankManagementSys.Enums.TransferStatus;
-import com.example.BankManagementSys.Exceptions.TransactiomAlreadyExistsException;
+
+import com.example.BankManagementSys.Exceptions.TransactionAmountInvalidException;
 import com.example.BankManagementSys.Reposityories.DepositTransactionRepository;
 import com.example.BankManagementSys.Reposityories.WithdrawalTransactionRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class WithdrawalTransactionService {
+    @Value("${withdrawal.max-amount}")
+    private BigDecimal maxAmount;
 
     @Autowired
     private WithdrawalTransactionRepository withdrawalRepoistory;
@@ -25,22 +32,32 @@ public class WithdrawalTransactionService {
     // ************ CRUD ******************
 
     // ** Add **
-    public WithdrawalTransaction addNewWithdrawalTransaction(WithdrawalTransaction withdrawal) throws TransactiomAlreadyExistsException {
-        Transaction existingTransaction = this.transactionService.getTransactionById(withdrawal.getTransactionId());
+    public WithdrawalTransaction addNewWithdrawalTransaction(WithdrawalTransaction withdrawal) {
 
-        if(existingTransaction!= null)
-        {
-            throw new TransactiomAlreadyExistsException();
+        if (withdrawal == null) {
+            throw new IllegalArgumentException("Withdrawal Transaction cannot be null.");
         }
+        if (withdrawal.getWithdrawalAmount().compareTo(BigDecimal.ONE) < 0) {
+            throw new TransactionAmountInvalidException("withdrawal amount must be greater than zero.");
+        }
+
+        if(withdrawal.getWithdrawalAmount().compareTo(maxAmount) > 0){
+            throw new TransactionAmountInvalidException("withdrawal amount must be less than maxAmount.");
+        }
+
+        withdrawal.setTransactionDateTime(LocalDateTime.now());
         return this.withdrawalRepoistory.save(withdrawal);
     }
 
     //** Update **
-    public WithdrawalTransaction updateWithdrawalTransaction(WithdrawalTransaction withdrawal) throws TransactiomAlreadyExistsException {
-        if ((transactionService.getTransactionById(withdrawal.getTransactionId())) == null){
-            throw new IllegalArgumentException("Transfer with ID " + withdrawal.getTransactionId() + " does not exist.");
-        }
+    public WithdrawalTransaction updateWithdrawalTransaction(WithdrawalTransaction withdrawal) {
 
+        if (withdrawal == null ) {
+            throw new IllegalArgumentException("Withdrawl cannot be null.");
+        }
+        if (!withdrawalRepoistory.existsById(withdrawal.getTransactionId())) {
+            throw new IllegalArgumentException("Withdrawal with ID " + withdrawal.getTransactionId() + " does not exist.");
+        }
         return withdrawalRepoistory.save(withdrawal);
     }
 
@@ -48,39 +65,35 @@ public class WithdrawalTransactionService {
     //** Delete **
     public void WithdrawalTransaction(int withdrawalId) {
         // Find the transaction
-        WithdrawalTransaction withdrawal = withdrawalRepoistory.findByTransactionId(withdrawalId);
+        WithdrawalTransaction withdrawal = withdrawalRepoistory.findByTransactionId(withdrawalId)
+                .orElseThrow(() -> new IllegalArgumentException("Withdrawal with ID " + withdrawalId + " does not exist."));
 
-        // Check if the transaction exists
-        if (withdrawal == null) {
-            throw new IllegalArgumentException("Deposit with ID " + withdrawalId + " does not exist.");
-        }
+
 
         // Perform the delete operation
-        withdrawalRepoistory.deleteById(withdrawalId);
+        withdrawalRepoistory.delete(withdrawal);
     }
 
     //** Read **
 
-    // Get a transfer by ID
+    // Get a Withdrawal by ID
     public WithdrawalTransaction getWithdrawalById(int withdrawalId) {
-        WithdrawalTransaction withdrawal =  withdrawalRepoistory.findByTransactionId(withdrawalId);
-        if (withdrawal== null) {
-            throw new IllegalArgumentException("Withdrawal with ID " + withdrawalId+ " does not exist.");
-        }
-        return withdrawal;
+
+        return withdrawalRepoistory.findById(withdrawalId)
+                .orElseThrow(() -> new IllegalArgumentException("Withdrawa with ID " + withdrawalId + " does not exist."));
+
     }
 
-    // Get all Transfers
+    // Get all Withdrawal
     public List<WithdrawalTransaction> getAllWithdrawals() {
         return withdrawalRepoistory.findAll();
 
     }
 
-
+    @Transactional
     public WithdrawalTransaction connectTransactionToBank(WithdrawalTransaction withdrawal, int bankAccountId) {
         // Connect the transfer to the bank account
         transactionService.connectTransactionToBankAccount(withdrawal, bankAccountId);
-
 
         // Save and return the transaction
         return withdrawalRepoistory.save(withdrawal);

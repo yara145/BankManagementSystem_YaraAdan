@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -22,7 +23,12 @@ public class Transaction implements Serializable{
     @Column(name = "description")
     private String description;
 
+
+    @Column(name = "transaction_date_time", nullable = false, updatable = false)
+    private LocalDateTime transactionDateTime;
+
     @JoinColumn(name = "bankaccount_id")
+
     @ManyToOne()
     private BankAccount bankAccount;
 

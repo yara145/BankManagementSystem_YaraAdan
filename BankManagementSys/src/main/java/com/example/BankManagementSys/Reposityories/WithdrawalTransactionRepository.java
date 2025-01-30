@@ -7,6 +7,8 @@ import com.example.BankManagementSys.Entities.TransferTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.example.BankManagementSys.Entities.WithdrawalTransaction;
 
+import java.util.Optional;
+
 public interface WithdrawalTransactionRepository extends JpaRepository <WithdrawalTransaction,Integer> {
-    WithdrawalTransaction findByTransactionId(int transactionId);
+    Optional<WithdrawalTransaction> findByTransactionId(int transactionId);
 }

@@ -8,6 +8,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -143,7 +144,7 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		System.out.println("\n");
 		System.out.println("\n");
 		TransferTransaction transfer = new TransferTransaction();
-		transfer.setAmount(500);
+		transfer.setAmount(BigDecimal.valueOf(500));
 		transfer.setDescription("This is my first transfer");
 		transfer.setTransferAccountNum(112);
 		transfer.setTransferBranchCode(2009);
@@ -162,7 +163,7 @@ public class BankManagementSysApplication implements CommandLineRunner {
 
 
 		System.out.println("************ update transfer amount \n");
-		transfer.setAmount(90);
+		transfer.setAmount(BigDecimal.valueOf(90));
 //		System.out.println(this.transferService.updateTransferTransaction(transfer));
 //		System.out.println(transfer);
 
@@ -170,23 +171,23 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		//System.out.println(this.transferService.getTransferById(7));
 		System.out.println(this.transferService.getTransferById(1));
 
-		transfer.setAmount(3000);
+		transfer.setAmount(BigDecimal.valueOf(3000));
 		System.out.println("lets update the transfer \n");
 		System.out.println(this.transferService.updateTransferTransaction(transfer));
 		System.out.println("Connect transfer to the bank account \n");
-		System.out.println(this.transferService.	connectTransactionToBank(transfer,1));
+		System.out.println(this.transferService.connectTransactionToBank(transfer,1));
 
 
 		System.out.println("*********** deposit **********");
 		DepositTransaction deposit = new DepositTransaction();
-		deposit.setDespositAmount(344);
+		deposit.setDespositAmount(BigDecimal.valueOf(344));
 		System.out.println(	depositService.addNewDepositTransaction(deposit));
 		System.out.println("Connect deposit to the bank account \n");
 		System.out.println(this.depositService.	connectTransactionToBank(deposit,1));
 
 
 		DepositTransaction deposit2 = new DepositTransaction();
-		deposit2.setDespositAmount(222);
+		deposit2.setDespositAmount(BigDecimal.valueOf(222));
 		System.out.println(	depositService.addNewDepositTransaction(deposit2));
 		System.out.println(depositService.getDepoistById(2));
 
@@ -196,29 +197,34 @@ public class BankManagementSysApplication implements CommandLineRunner {
 
 		System.out.println("*********** withdrawal **********");
 		WithdrawalTransaction withdrawal = new WithdrawalTransaction();
-		withdrawal.setWithdrawalAmount(455);
+		withdrawal.setWithdrawalAmount(BigDecimal.valueOf(455));
 		System.out.println(withdrawalService.addNewWithdrawalTransaction(withdrawal));
 		System.out.println(this.withdrawalService.	connectTransactionToBank(withdrawal,1));
 
 
-		System.out.println("*********** Loan **********");
+		System.out.println("*********** Loan **********\n");
 		Loan loan = new Loan();
 		loan.setEndPaymentDate(new Date());
+		loan.setLoanName("Personal Loan for Yara");
 		loan.setInterestRate(0.3);
-		loan.setLoanAmount(12000);
+		loan.setLoanAmount(BigDecimal.valueOf(12000));
 		loan.setStartPaymentDate(new Date());
+
+
 		System.out.println(loanService.addNewLoan(loan));
+		System.out.println("***********Lets Print the  Loan  **********\n"+ loan.getTransactionId());
 		System.out.println(this.loanService.connectLoanToBank(loan,1));
 
-//		System.out.println("*********** Loan Payment **********");
-//		LoanPayment loanPayment = new LoanPayment();
-//		loanPayment.setPaymentAmount(222);
-//		loanPayment.setPaymentDate(new Date());
-//
-//		System.out.println(this.loanPaymentService.addLoanPayment(loanPayment, 1));
-//		System.out.println("print all transactions \n");
-//		List<Transaction> allTransactions = this.transactionService.getAllTransactions();
-//		System.out.println(allTransactions);
+		System.out.println("*********** Loan Payment **********");
+		LoanPayment loanPayment = new LoanPayment();
+		loanPayment.setPaymentAmount(222);
+
+
+
+		System.out.println(this.loanPaymentService.addLoanPayment(loanPayment, 5));
+		System.out.println("print all transactions \n");
+		List<Transaction> allTransactions = this.transactionService.getAllTransactions();
+		System.out.println(allTransactions);
 
 
 

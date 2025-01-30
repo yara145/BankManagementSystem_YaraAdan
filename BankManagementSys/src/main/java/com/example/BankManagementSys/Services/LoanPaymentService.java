@@ -7,6 +7,7 @@ import com.example.BankManagementSys.Reposityories.LoanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,6 +25,7 @@ public class LoanPaymentService {
                 new IllegalArgumentException("Loan with ID " + loanId + " does not exist."));
 
         loanPayment.setLoan(loan); // Link payment to loan
+        loanPayment.setPaymentDateTime(LocalDateTime.now());
         return loanPaymentRepository.save(loanPayment);
     }
 

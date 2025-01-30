@@ -3,6 +3,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -13,5 +14,5 @@ import java.util.List;
 public class DepositTransaction extends Transaction{
 
     @Column(name = "desposit_amount")
-    private double despositAmount;
+    private BigDecimal despositAmount;
 }

@@ -2,8 +2,10 @@ package com.example.BankManagementSys.Services;
 
 import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Transaction;
-import com.example.BankManagementSys.Exceptions.TransactiomAlreadyExistsException;
+import com.example.BankManagementSys.Entities.TransferTransaction;
+
 import com.example.BankManagementSys.Reposityories.TransactionRepoistory;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,23 +19,13 @@ public class TransactionService {
     @Autowired
     private BankAccountService bankAccountService;
 
-//
-//    public Transaction addNewTransaction(Transaction transaction) throws TransactiomAlreadyExistsException {
-//        List<Transaction> existingTransaction = this.transactionRepoistory.findByTransactionId(transaction.getTransactionId());
-//        if(existingTransaction.size()>0)
-//        {
-//            throw new TransactiomAlreadyExistsException();
-//        }
-//    return this.transactionRepoistory.save(transaction);
-//}
 
     public Transaction getTransactionById(int transactionId){ return this.transactionRepoistory.findByTransactionId(transactionId); }
 
-public List<Transaction> getAllTransactions() {return this.transactionRepoistory.findAll();}
+    public List<Transaction> getAllTransactions() {return this.transactionRepoistory.findAll();}
 
 
-
-
+    @Transactional
     public Transaction connectTransactionToBankAccount(Transaction transaction, int bankAccountId) {
         // Fetch the BankAccount by ID
 
@@ -42,6 +34,10 @@ public List<Transaction> getAllTransactions() {return this.transactionRepoistory
         // Validate if the BankAccount exists
         if (bankAccount == null) {
             throw new IllegalArgumentException("BankAccount not found for ID: " + bankAccountId);
+        }
+        // Validate if the Transaction exists
+        if (transaction == null) {
+            throw new IllegalArgumentException("Transaction not found.");
         }
 
         // Associate the transaction with the bank account

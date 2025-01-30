@@ -1,6 +1,8 @@
 package com.example.BankManagementSys.Entities;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.util.ArrayList;
 
 import java.io.Serializable;
@@ -27,7 +29,7 @@ public class Loan extends Transaction  {
     private Date endPaymentDate;
 
     @Column(name = "loan_amount")
-    private double loanAmount;
+    private BigDecimal loanAmount;
 
     @Column(name = "interest_rate")
     private double interestRate;
@@ -39,7 +41,7 @@ public class Loan extends Transaction  {
     private Date loanDate;
 
 
-    @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LoanPayment> payments = new ArrayList<>(); // Changed to List
+    @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+    private List<LoanPayment> payments ;// Changed to List
 
 }
