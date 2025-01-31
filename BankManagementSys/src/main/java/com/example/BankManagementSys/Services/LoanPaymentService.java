@@ -7,6 +7,7 @@ import com.example.BankManagementSys.Reposityories.LoanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,24 +19,56 @@ public class LoanPaymentService {
 
     @Autowired
     private LoanRepository loanRepository;
-
+    @Autowired
+    private BankAccountService bankAccountService;
     // ** Add a New Payment **
     public LoanPayment addLoanPayment(LoanPayment loanPayment, int loanId) {
-        Loan loan = loanRepository.findById(loanId).orElseThrow(() ->
-                new IllegalArgumentException("Loan with ID " + loanId + " does not exist."));
+        // Fetch loan details
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new IllegalArgumentException("Loan with ID " + loanId + " does not exist."));
 
-        loanPayment.setLoan(loan); // Link payment to loan
-        loanPayment.setPaymentDateTime(LocalDateTime.now());
-        return loanPaymentRepository.save(loanPayment);
-    }
-
-    // ** Update a Payment **
-    public LoanPayment updateLoanPayment(LoanPayment loanPayment) {
-        if (!loanPaymentRepository.existsById(loanPayment.getPaymentNumber())) {
-            throw new IllegalArgumentException("Payment with ID " + loanPayment.getPaymentNumber() + " does not exist.");
+        // Ensure loan has a valid interest rate and remaining balance
+        // ** Prevent loan payment issue **
+        if (loan.getRemainingBalance() <= 0) {
+            System.out.println("⚠️ Loan has already been fully paid. Skipping additional payments.");
+            return null; // ✅ Just return null instead of throwing an exception
         }
+
+        // ** Calculate Monthly Interest **
+        double monthlyInterestRate = loan.getInterestRate() / 100 / 12;  // Convert annual rate to monthly decimal
+        double interestAmount = loan.getRemainingBalance() * monthlyInterestRate;
+
+        // ** Calculate Principal Payment **
+        double principalPayment = loanPayment.getPaymentAmount() - interestAmount;
+        if (principalPayment <= 0) {
+            throw new IllegalArgumentException("Payment must be greater than the interest amount.");
+        }
+        int accountId = loan.getBankAccount().getId();
+        // ** Deduct Payment from Bank Account **
+        boolean success = bankAccountService.updateBalance(accountId, BigDecimal.valueOf(loanPayment.getPaymentAmount()), false,true);
+        if (!success) {
+            System.err.println("❌ Loan payment failed: Insufficient balance in bank account.");
+            return null; // Do not save loan payment if balance update failed.
+        }
+
+        // ** Deduct from Loan Balance **
+        loan.setRemainingBalance(loan.getRemainingBalance() - principalPayment);
+        loan.setNumberOfPayments(loan.getNumberOfPayments() - 1);
+
+        // Ensure the remaining balance doesn't go negative
+        if (loan.getRemainingBalance() < 0) {
+            loan.setRemainingBalance(0);
+        }
+
+        // ** Set Payment Details **
+        loanPayment.setLoan(loan);
+        loanPayment.setPaymentDateTime(LocalDateTime.now());
+
+        // Save the updated loan and payment transaction
+        loanRepository.save(loan);
         return loanPaymentRepository.save(loanPayment);
     }
+
 
     // ** Delete a Payment **
     public void deleteLoanPayment(int paymentId) {

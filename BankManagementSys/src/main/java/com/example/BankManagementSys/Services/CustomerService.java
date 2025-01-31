@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class CustomerService {
+public class CustomerService extends UserService{
     @Value("${customer.min-age}")
     private int minCustomerAge;
 
@@ -23,13 +23,12 @@ public class CustomerService {
     private CustomerRepository customerRepository;
     @Autowired
     private BankAccountService bankAccountService;
-    @Autowired
-    private UserService userService;
+
 
     //________________________________C.R.U.D Functions___________________
     public Customer addNewCustomer(Customer customer) throws IllegalArgumentException {
         // Validate shared attributes using UserService
-        userService.validateUser(customer);
+        validateUser(customer);
         //check if the age is legal
         int age = customerRepository.calculateAge(customer.getBirthdate());
         if (age < minCustomerAge) {

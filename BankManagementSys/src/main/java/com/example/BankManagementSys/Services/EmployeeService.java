@@ -12,13 +12,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class EmployeeService {
+public class EmployeeService extends UserService{
 
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @Autowired
-    private UserService userService;
+
 
     @Autowired
     private BranchService branchService;
@@ -29,7 +28,7 @@ public class EmployeeService {
 
     // ___________________________C.R.U.D Functions_________________________
     public Employee addNewEmployee(Employee employee) {
-        userService.validateUser(employee);
+      validateUser(employee);
 
         if (employee.getStartDate() == null) {
             throw new IllegalArgumentException("Start date is required for employees.");

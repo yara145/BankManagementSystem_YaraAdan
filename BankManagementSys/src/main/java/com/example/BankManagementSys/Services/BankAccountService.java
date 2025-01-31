@@ -103,4 +103,61 @@ public class BankAccountService {
                 .filter(account -> account.getStatus().equals(status))
                 .toList();
     }
+    public boolean updateBalance(int accountId, BigDecimal amount, boolean isDeposit, boolean isLoanPayment) {
+        try {
+            // Fetch account and validate existence
+            BankAccount account = bankAccountRepository.findById(accountId)
+                    .orElseThrow(() -> new IllegalArgumentException("Account not found."));
+
+            // Validate account status
+            if (account.getStatus() != BankAccountStatus.ACTIVE) {
+                System.err.println("❌ Transaction failed: Account is not active.");
+                return false;
+            }
+
+            // Ensure positive transaction amount (assuming validation is done before calling this)
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                System.err.println("❌ Transaction failed: Amount must be greater than zero.");
+                return false;
+            }
+
+            if (isDeposit) {
+                // Perform deposit
+                account.setBalance(account.getBalance().add(amount));
+                System.out.println("✅ Deposit successful. New balance: " + account.getBalance());
+            } else {
+                // ** Check Overdraft Limit (Only for Regular Withdrawals) **
+                BigDecimal newBalance = account.getBalance().subtract(amount);
+
+                if (!isLoanPayment && newBalance.compareTo(overdraftLimit) < 0) {
+                    System.err.println("❌ Transaction failed: Overdraft limit exceeded.");
+                    return false;
+                }
+
+                // Perform withdrawal
+                account.setBalance(newBalance);
+                System.out.println("✅ Withdrawal successful. New balance: " + account.getBalance());
+            }
+
+            // Update the account balance in the database
+            updateBankAccount(account);
+
+            // Return success
+            return true;
+
+        } catch (Exception e) {
+            // Catch all exceptions and return failure
+            System.err.println("⚠️ Unexpected error: " + e.getMessage());
+            return false;
+        }
+
+    }
+    // Fetch all bank accounts
+    public List<BankAccount> getAllBankAccounts() {
+        return bankAccountRepository.findAll();
+    }
+    // Fetch bank accounts by branch
+    public List<BankAccount> getBankAccountsByBranchId(int branchId) {
+        return bankAccountRepository.findByBranchId(branchId);
+    }
 }

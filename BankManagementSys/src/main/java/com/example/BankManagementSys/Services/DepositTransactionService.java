@@ -28,24 +28,41 @@ public class DepositTransactionService {
     @Autowired
     private TransactionService transactionService;
 
+    @Autowired
+    private BankAccountService bankAccountService;
     // ************ CRUD ******************
 
     // ** Add **
-    public DepositTransaction addNewDepositTransaction(DepositTransaction deposit)  {
+    // ** Add Deposit Transaction **
+    public DepositTransaction addNewDepositTransaction(DepositTransaction deposit) {
         if (deposit == null) {
             throw new IllegalArgumentException("Deposit cannot be null.");
         }
         if (deposit.getDespositAmount().compareTo(BigDecimal.ONE) < 0) {
             throw new TransactionAmountInvalidException("Deposit amount must be greater than zero.");
         }
+        if (deposit.getDespositAmount().compareTo(maxAmount) > 0) {
+            throw new TransactionAmountInvalidException("Deposit amount exceeds the allowed maximum.");
+        }
 
-        if(deposit.getDespositAmount().compareTo(maxAmount) > 0){
-            throw new TransactionAmountInvalidException("Deposit amount must be less than maxAmount.");
+        // Ensure transaction is linked to a valid bank account
+        if (deposit.getBankAccount() == null) {
+            throw new IllegalArgumentException("Deposit transaction must be linked to a bank account.");
+        }
+
+        int accountId = deposit.getBankAccount().getId();
+
+        // Update bank account balance
+        boolean success = bankAccountService.updateBalance(accountId, deposit.getDespositAmount(), true, false);
+        if (!success) {
+            System.err.println("❌ Deposit failed for account ID: " + accountId);
+            return null; // Do not save the transaction if balance update failed
         }
 
         deposit.setTransactionDateTime(LocalDateTime.now());
-        return this.depositRepoistory.save(deposit);
+        return  depositRepoistory.save(deposit);
     }
+
 
     //** Update **
     public DepositTransaction updateDepositTransaction(DepositTransaction deposit)  {

@@ -28,26 +28,40 @@ public class WithdrawalTransactionService {
 
     @Autowired
     private TransactionService transactionService;
-
+    @Autowired
+    private BankAccountService bankAccountService;
     // ************ CRUD ******************
 
     // ** Add **
     public WithdrawalTransaction addNewWithdrawalTransaction(WithdrawalTransaction withdrawal) {
-
         if (withdrawal == null) {
             throw new IllegalArgumentException("Withdrawal Transaction cannot be null.");
         }
         if (withdrawal.getWithdrawalAmount().compareTo(BigDecimal.ONE) < 0) {
-            throw new TransactionAmountInvalidException("withdrawal amount must be greater than zero.");
+            throw new TransactionAmountInvalidException("Withdrawal amount must be greater than zero.");
+        }
+        if (withdrawal.getWithdrawalAmount().compareTo(maxAmount) > 0) {
+            throw new TransactionAmountInvalidException("Withdrawal amount exceeds the allowed maximum.");
         }
 
-        if(withdrawal.getWithdrawalAmount().compareTo(maxAmount) > 0){
-            throw new TransactionAmountInvalidException("withdrawal amount must be less than maxAmount.");
+        // Ensure transaction is linked to a valid bank account
+        if (withdrawal.getBankAccount() == null) {
+            throw new IllegalArgumentException("Withdrawal transaction must be linked to a bank account.");
+        }
+
+        int accountId = withdrawal.getBankAccount().getId();
+
+        // Update bank account balance
+        boolean success = bankAccountService.updateBalance(accountId, withdrawal.getWithdrawalAmount(), false, false);
+        if (!success) {
+            System.err.println("❌ Withdrawal failed for account ID: " + accountId);
+            return null; // Do not save the transaction if balance update failed
         }
 
         withdrawal.setTransactionDateTime(LocalDateTime.now());
-        return this.withdrawalRepoistory.save(withdrawal);
+        return withdrawalRepoistory.save(withdrawal);
     }
+
 
     //** Update **
     public WithdrawalTransaction updateWithdrawalTransaction(WithdrawalTransaction withdrawal) {
