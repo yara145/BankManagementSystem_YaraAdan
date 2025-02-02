@@ -2,6 +2,7 @@ package com.example.BankManagementSys.Controllers;
 
 import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Enums.BankAccountStatus;
+import com.example.BankManagementSys.Exceptions.BankAccountNotFoundException;
 import com.example.BankManagementSys.Services.BankAccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,8 @@ public class BankAccountController {
     // ✅ Get a bank account by ID
     @GetMapping("get/{id}")
     public ResponseEntity<BankAccount> getBankAccountById(@PathVariable int id) {
-        return ResponseEntity.ok(bankAccountService.getBankAccountById(id));
+        BankAccount bankAccount = bankAccountService.getBankAccountById(id);
+        return ResponseEntity.ok(bankAccount);
     }
 
     // ✅ Create a new bank account

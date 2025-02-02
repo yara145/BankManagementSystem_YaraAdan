@@ -3,6 +3,7 @@ package com.example.BankManagementSys.Controllers;
 import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Branch;
 import com.example.BankManagementSys.Entities.Employee;
+import com.example.BankManagementSys.Exceptions.EmployeeNotFoundException;
 import com.example.BankManagementSys.Services.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,8 @@ public class EmployeeController {
     // ✅ Get an employee by ID
     @GetMapping("get/{id}")
     public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
-        return ResponseEntity.ok(employeeService.getEmployeeById(id));
+        Employee employee = employeeService.getEmployeeById(id);
+        return ResponseEntity.ok(employee);
     }
 
     // ✅ Create a new employee

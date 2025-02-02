@@ -6,8 +6,10 @@ import com.example.BankManagementSys.Entities.Customer;
 import com.example.BankManagementSys.Reposityories.BranchRepository;
 import com.example.BankManagementSys.Reposityories.CustomerRepository;
 import jakarta.transaction.Transactional;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -25,28 +27,65 @@ public class CustomerService extends UserService {
 
     @Autowired
     private BankAccountService bankAccountService;
+
     @Autowired
     private BranchRepository branchRepository;
+
     //________________________________C.R.U.D Functions___________________
 
     public Customer addNewCustomer(Customer customer) throws IllegalArgumentException {
-        // Validate shared attributes using UserService
-        validateUser(customer);
-        // Check if the age is legal
-        int age = customerRepository.calculateAge(customer.getBirthdate());
-        if (age < minCustomerAge) {
-            throw new IllegalArgumentException("Customer's age is below the minimum required: " + minCustomerAge);
+        try {
+            // Validate shared attributes using UserService
+            validateUser(customer);
+
+            // Check if the age is legal
+            int age = customerRepository.calculateAge(customer.getBirthdate());
+            if (age < minCustomerAge) {
+                throw new IllegalArgumentException("Customer's age is below the minimum required: " + minCustomerAge);
+            }
+
+            // Set the join date to today
+            customer.setJoinDate(new Date());
+            System.out.println("******************Customer created successfully************");
+
+            // Save the new customer
+            return this.customerRepository.save(customer);
+
+        } catch (DataIntegrityViolationException e) {
+            Throwable rootCause = e.getRootCause();
+            String errorMessage = "A record with the provided unique value already exists.";
+
+            if (rootCause instanceof ConstraintViolationException) {
+                if (rootCause.getMessage().contains("email")) {
+                    errorMessage = "A user with this email already exists.";
+                } else if (rootCause.getMessage().contains("userName")) {
+                    errorMessage = "A user with this username already exists.";
+                }
+            }
+
+            System.out.println("DataIntegrityViolationException fired: " + errorMessage);
+            throw new DataIntegrityViolationException(errorMessage);
         }
-        // Set the join date to today
-        customer.setJoinDate(new Date());
-        System.out.println("******************Customer created successfully************");
-        // Save the new customer
-        return this.customerRepository.save(customer);
     }
 
     public void updateCustomer(Customer customer) {
-        // Perform update operations
-        this.customerRepository.save(customer);
+        try {
+            this.customerRepository.save(customer);
+        } catch (DataIntegrityViolationException e) {
+            Throwable rootCause = e.getRootCause();
+            String errorMessage = "A record with the provided unique value already exists.";
+
+            if (rootCause instanceof ConstraintViolationException) {
+                if (rootCause.getMessage().contains("email")) {
+                    errorMessage = "A user with this email already exists.";
+                } else if (rootCause.getMessage().contains("userName")) {
+                    errorMessage = "A user with this username already exists.";
+                }
+            }
+
+            System.out.println("DataIntegrityViolationException fired: " + errorMessage);
+            throw new DataIntegrityViolationException(errorMessage);
+        }
     }
 
     public List<Customer> getAllCustomers() {
@@ -102,8 +141,7 @@ public class CustomerService extends UserService {
         System.out.println("**** BankAccount Has Been Added to Customer ****");
     }
 
-
-    public List<BankAccount> getBankAccountsForCustomer(Long customerId) { //*gettings bankaccounts for the customer
+    public List<BankAccount> getBankAccountsForCustomer(Long customerId) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found."));
         return customer.getBankAccounts();
