@@ -45,19 +45,19 @@ public class DepositTransactionService {
             throw new TransactionAmountInvalidException("Deposit amount exceeds the allowed maximum.");
         }
 
-        // Ensure transaction is linked to a valid bank account
-        if (deposit.getBankAccount() == null) {
-            throw new IllegalArgumentException("Deposit transaction must be linked to a bank account.");
-        }
-
-        int accountId = deposit.getBankAccount().getId();
-
-        // Update bank account balance
-        boolean success = bankAccountService.updateBalance(accountId, deposit.getDespositAmount(), true, false);
-        if (!success) {
-            System.err.println("❌ Deposit failed for account ID: " + accountId);
-            return null; // Do not save the transaction if balance update failed
-        }
+//        // Ensure transaction is linked to a valid bank account
+//        if (deposit.getBankAccount() == null) {
+//            throw new IllegalArgumentException("Deposit transaction must be linked to a bank account.");
+//        }
+//
+//        int accountId = deposit.getBankAccount().getId();
+//
+//        // Update bank account balance
+//        boolean success = bankAccountService.updateBalance(accountId, deposit.getDespositAmount(), true, false);
+//        if (!success) {
+//            System.err.println("❌ Deposit failed for account ID: " + accountId);
+//            return null; // Do not save the transaction if balance update failed
+//        }
 
         deposit.setTransactionDateTime(LocalDateTime.now());
         return  depositRepoistory.save(deposit);
@@ -111,7 +111,25 @@ public class DepositTransactionService {
         // Connect the transfer to the bank account
         transactionService.connectTransactionToBankAccount(deposit, bankAccountId);
 
+        // Ensure transaction is linked to a valid bank account
+        if (deposit.getBankAccount() == null) {
+            throw new IllegalArgumentException("Deposit transaction must be linked to a bank account.");
+        }
+
+        int accountId = deposit.getBankAccount().getId();
+
+        // Update bank account balance
+        boolean success = bankAccountService.updateBalance(accountId, deposit.getDespositAmount(), true, false);
+        if (!success) {
+            System.err.println("❌ Deposit failed for account ID: " + accountId);
+            return null; // Do not save the transaction if balance update failed
+        }
         // Save and return the transaction
         return depositRepoistory.save(deposit);
+    }
+
+    // ✅ Retrieves all deposits associated with a specific bank account.
+    public List<DepositTransaction> getDepositsByAccountId(int accountId) {
+        return depositRepoistory.findByBankAccountId(accountId);
     }
 }

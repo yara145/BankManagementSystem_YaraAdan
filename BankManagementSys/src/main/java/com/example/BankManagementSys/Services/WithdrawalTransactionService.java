@@ -44,21 +44,23 @@ public class WithdrawalTransactionService {
             throw new TransactionAmountInvalidException("Withdrawal amount exceeds the allowed maximum.");
         }
 
-        // Ensure transaction is linked to a valid bank account
-        if (withdrawal.getBankAccount() == null) {
-            throw new IllegalArgumentException("Withdrawal transaction must be linked to a bank account.");
-        }
+//        // Ensure transaction is linked to a valid bank account
+//        if (withdrawal.getBankAccount() == null) {
+//            throw new IllegalArgumentException("Withdrawal transaction must be linked to a bank account.");
+//        }
+//
+//        int accountId = withdrawal.getBankAccount().getId();
+//
+//        // Update bank account balance
+//        boolean success = bankAccountService.updateBalance(accountId, withdrawal.getWithdrawalAmount(), false, false);
+//        if (!success) {
+//            System.err.println("❌ Withdrawal failed for account ID: " + accountId);
+//            return null; // Do not save the transaction if balance update failed
+//        }
 
-        int accountId = withdrawal.getBankAccount().getId();
-
-        // Update bank account balance
-        boolean success = bankAccountService.updateBalance(accountId, withdrawal.getWithdrawalAmount(), false, false);
-        if (!success) {
-            System.err.println("❌ Withdrawal failed for account ID: " + accountId);
-            return null; // Do not save the transaction if balance update failed
-        }
 
         withdrawal.setTransactionDateTime(LocalDateTime.now());
+
         return withdrawalRepoistory.save(withdrawal);
     }
 
@@ -77,7 +79,7 @@ public class WithdrawalTransactionService {
 
 
     //** Delete **
-    public void WithdrawalTransaction(int withdrawalId) {
+    public void DeleteWithdrawalTransaction(int withdrawalId) {
         // Find the transaction
         WithdrawalTransaction withdrawal = withdrawalRepoistory.findByTransactionId(withdrawalId)
                 .orElseThrow(() -> new IllegalArgumentException("Withdrawal with ID " + withdrawalId + " does not exist."));
@@ -109,7 +111,27 @@ public class WithdrawalTransactionService {
         // Connect the transfer to the bank account
         transactionService.connectTransactionToBankAccount(withdrawal, bankAccountId);
 
+        // Ensure transaction is linked to a valid bank account
+        if (withdrawal.getBankAccount() == null) {
+            throw new IllegalArgumentException("Withdrawal transaction must be linked to a bank account.");
+        }
+
+        int accountId = withdrawal.getBankAccount().getId();
+
+        // Update bank account balance
+        boolean success = bankAccountService.updateBalance(accountId, withdrawal.getWithdrawalAmount(), false, false);
+        if (!success) {
+            System.err.println("❌ Withdrawal failed for account ID: " + accountId);
+            return null; // Do not save the transaction if balance update failed
+        }
+
+
         // Save and return the transaction
         return withdrawalRepoistory.save(withdrawal);
+    }
+
+
+    public List<WithdrawalTransaction> getWithdrawalsByAccountId(int accountId) {
+        return withdrawalRepoistory.findByBankAccountId(accountId);
     }
 }

@@ -10,4 +10,9 @@ public interface LoanRepository extends JpaRepository<Loan,Integer>{
     //List<Loan> findByBankAccountId(int bankAccountId);
 
     Loan findByTransactionId(int transactionId);
+
+    // ✅ Finds all loans for a specific bank account.
+    List<Loan> findByBankAccountId(int bankAccountId);
+
+
 }

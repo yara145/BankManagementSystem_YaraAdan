@@ -1,4 +1,5 @@
 package com.example.BankManagementSys.Entities;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
@@ -12,11 +13,11 @@ public class LoanPayment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int paymentNumber;
+    private Integer paymentNumber;
 
 
     @Column(name = "payment_amount")
-    private double paymentAmount;
+    private Double paymentAmount;
 
     @Column(name = "payment_date_time", nullable = false, updatable = false)
     private LocalDateTime paymentDateTime;
@@ -24,6 +25,7 @@ public class LoanPayment {
 
     @JoinColumn(name = "loan_id", nullable = false)
     @ManyToOne
+    @JsonBackReference
     @ToString.Exclude
     private Loan loan;
 

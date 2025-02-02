@@ -48,6 +48,9 @@ public class TransactionService {
     }
 
 
+    public List<Transaction> getTransactionsByBankAccount(int bankAccountId) {
+        return transactionRepoistory.findByBankAccount_Id(bankAccountId);
+    }
 
 
 

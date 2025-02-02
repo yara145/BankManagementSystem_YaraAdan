@@ -139,16 +139,16 @@ public class BankManagementSysApplication implements CommandLineRunner {
 
 // ✅ Deposit 1
 		DepositTransaction deposit = new DepositTransaction();
-		deposit.setDespositAmount(BigDecimal.valueOf(344));
-		deposit.setBankAccount(existingBankAccount); // 🔥 Link to bank account
+		deposit.setDespositAmount(BigDecimal.valueOf(10000));
+		//deposit.setBankAccount(existingBankAccount); // 🔥 Link to bank account
 		System.out.println(depositService.addNewDepositTransaction(deposit));
 		System.out.println("Connect deposit to the bank account");
 		System.out.println(depositService.connectTransactionToBank(deposit, existingBankAccount.getId()));
 
 // ✅ Deposit 2
 		DepositTransaction deposit2 = new DepositTransaction();
-		deposit2.setDespositAmount(BigDecimal.valueOf(222));
-		deposit2.setBankAccount(existingBankAccount); // 🔥 Link to bank account
+		deposit2.setDespositAmount(BigDecimal.valueOf(15000));
+		//deposit2.setBankAccount(existingBankAccount); // 🔥 Link to bank account
 		System.out.println(depositService.addNewDepositTransaction(deposit2));
 		System.out.println(depositService.getDepoistById(deposit2.getTransactionId())); // 🔥 Use actual ID
 		System.out.println("Connect deposit to the bank account");
@@ -158,10 +158,12 @@ public class BankManagementSysApplication implements CommandLineRunner {
 
 // ✅ Withdrawal
 		WithdrawalTransaction withdrawal = new WithdrawalTransaction();
-		withdrawal.setWithdrawalAmount(BigDecimal.valueOf(455));
-		withdrawal.setBankAccount(existingBankAccount); // 🔥 Link to bank account
+		withdrawal.setWithdrawalAmount(BigDecimal.valueOf(4000));
+		//withdrawal.setBankAccount(existingBankAccount); // 🔥 Link to bank account
+
 		System.out.println(withdrawalService.addNewWithdrawalTransaction(withdrawal));
 		System.out.println(withdrawalService.connectTransactionToBank(withdrawal, existingBankAccount.getId()));
+
 
 		System.out.println("*********** Loan **********\n");
 // ✅ Loan
@@ -177,9 +179,10 @@ public class BankManagementSysApplication implements CommandLineRunner {
 
 		loan.setLoanName("Personal Loan for Yara");
 		loan.setInterestRate(0.3);
-		loan.setLoanAmount(BigDecimal.valueOf(12000));
+		loan.setNumberOfPayments(5);
+		loan.setLoanAmount(BigDecimal.valueOf(10000));
 		loan.setRemainingBalance(loan.getLoanAmount().doubleValue()); // ✅ Set correct balance
-		loan.setBankAccount(existingBankAccount); // 🔥 Link to bank account
+		//loan.setBankAccount(existingBankAccount); // 🔥 Link to bank account
 
 		System.out.println(loanService.addNewLoan(loan));
 
@@ -190,7 +193,7 @@ public class BankManagementSysApplication implements CommandLineRunner {
 
 // ✅ Loan Payment
 		LoanPayment loanPayment = new LoanPayment();
-		loanPayment.setPaymentAmount(222);
+		loanPayment.setPaymentAmount(1000.0);
 		loanPayment.setLoan(loan); // 🔥 Link to loan
 
 		System.out.println(loanPaymentService.addLoanPayment(loanPayment, loan.getTransactionId()));

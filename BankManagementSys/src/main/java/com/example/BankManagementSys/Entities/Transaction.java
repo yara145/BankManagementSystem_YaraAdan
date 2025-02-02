@@ -1,5 +1,6 @@
 package com.example.BankManagementSys.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,6 +31,7 @@ public class Transaction implements Serializable{
     @JoinColumn(name = "bankaccount_id")
 
     @ManyToOne()
+    @JsonIgnore
     private BankAccount bankAccount;
 
 

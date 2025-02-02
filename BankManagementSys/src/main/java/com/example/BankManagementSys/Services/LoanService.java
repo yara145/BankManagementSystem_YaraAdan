@@ -103,7 +103,12 @@ public class LoanService {
             throw new IllegalArgumentException("Loan with ID " + loan.getTransactionId() + " does not exist.");
         }
 
+        // ✅ Ensure `numberOfPayments` is never negative
+        if (loan.getNumberOfPayments() < 0) {
+            loan.setNumberOfPayments(0);
+        }
         return loanRepoistory.save(loan);
+
     }
 
 
@@ -140,6 +145,11 @@ public class LoanService {
 
         // Save and return the transaction
         return loanRepoistory.save(loan);
+    }
+
+    // ✅ Retrieves all loans linked to a specific bank account.
+    public List<Loan> getLoansByAccountId(int accountId) {
+        return loanRepoistory.findByBankAccountId(accountId);
     }
 
 }

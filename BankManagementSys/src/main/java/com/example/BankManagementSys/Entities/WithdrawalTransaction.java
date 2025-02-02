@@ -17,4 +17,6 @@ public class WithdrawalTransaction extends Transaction{
 
     @Column(name = "withdrawal_amount")
     private BigDecimal withdrawalAmount;
+
+
 }

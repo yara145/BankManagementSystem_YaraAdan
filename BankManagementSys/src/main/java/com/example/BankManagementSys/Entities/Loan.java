@@ -22,8 +22,9 @@ public class Loan extends Transaction  {
     @Column(name = "start_payment_date")
     private Date startPaymentDate;
 
-    @Column(name = "number_of_payments")
-    private int numberOfPayments;
+    @Column(name = "number_of_payments", nullable = false)
+    private int numberOfPayments = 0;
+
 
     @Column(name = "end_payment_date")
     private Date endPaymentDate;
@@ -32,7 +33,7 @@ public class Loan extends Transaction  {
     private BigDecimal loanAmount;
 
     @Column(name = "interest_rate")
-    private double interestRate;
+    private Double interestRate;
 
     @Column(name = "remaining_balance")
     private double remainingBalance;
@@ -40,8 +41,15 @@ public class Loan extends Transaction  {
     @Column(name = "loan_date")
     private Date loanDate;
 
+    @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<LoanPayment> payments = new ArrayList<>();  // ✅ Initialize list
 
-    @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
-    private List<LoanPayment> payments ;// Changed to List
+//    // ✅ Method to safely remove a payment
+//    public void removePayment(LoanPayment payment) {
+//        this.payments.remove(payment);
+//    }
+//
+//    @OneToMany(mappedBy = "loan", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+//    private List<LoanPayment> payments ;// Changed to List
 
 }
