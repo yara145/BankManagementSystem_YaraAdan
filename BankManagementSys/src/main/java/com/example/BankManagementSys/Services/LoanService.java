@@ -39,36 +39,57 @@ public class LoanService {
     // ************ CRUD ******************
 
     // ** Add **
-    public Loan addNewLoan(Loan loan)  {
-
+    public Loan addNewLoan(Loan loan) {
         if (loan == null) {
             throw new IllegalArgumentException("Loan cannot be null.");
         }
+
         // Validate Loan Amount
+        if (loan.getLoanAmount() == null) {
+            throw new IllegalArgumentException("Loan amount cannot be null.");
+        }
         if (loan.getLoanAmount().compareTo(minAmount) < 0) {
-            throw new TransactionAmountInvalidException("Loan amount must be greater than minimum amount.");
+            throw new TransactionAmountInvalidException(
+                    String.format("Loan amount must be at least %s.", minAmount)
+            );
+        }
+        if (loan.getLoanAmount().compareTo(maxAmount) > 0) {
+            throw new TransactionAmountInvalidException(
+                    String.format("Loan amount must not exceed %s.", maxAmount)
+            );
         }
 
-        if(loan.getLoanAmount().compareTo(maxAmount) > 0){
-            throw new TransactionAmountInvalidException("Loan amount must be less than maxAmount.");
-        }
         // Validate Loan Name
         if (loan.getLoanName() == null || loan.getLoanName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Loan name cannot be empty.");
+            throw new IllegalArgumentException("Loan name cannot be null or empty.");
         }
+
         // Validate Interest Rate
         if (loan.getInterestRate() < 0 || loan.getInterestRate() > maxInterestRate) {
-            throw new IllegalArgumentException("Interest rate must be between 0% and " + maxInterestRate + "%.");
+            throw new IllegalArgumentException(
+                    String.format("Interest rate must be between 0%% and %s%%.", maxInterestRate)
+            );
         }
+
         // Validate Start Payment Date
-        if (loan.getStartPaymentDate() == null || loan.getStartPaymentDate().before(new Date())) {
+        if (loan.getStartPaymentDate() == null) {
+            throw new IllegalArgumentException("Start payment date cannot be null.");
+        }
+        if (loan.getStartPaymentDate().before(new Date())) {
             throw new IllegalArgumentException("Start payment date cannot be in the past.");
         }
 
         // Validate End Payment Date
-        if (loan.getEndPaymentDate() == null || loan.getEndPaymentDate().before(loan.getStartPaymentDate())) {
-            throw new IllegalArgumentException("End payment date must be after start payment date.");
+        if (loan.getEndPaymentDate() == null) {
+            throw new IllegalArgumentException("End payment date cannot be null.");
         }
+        if (!loan.getEndPaymentDate().after(loan.getStartPaymentDate())) {
+            throw new IllegalArgumentException(
+                    "End payment date must be after the start payment date."
+            );
+        }
+
+        // Save loan to the repository
         loan.setTransactionDateTime(LocalDateTime.now());
         return this.loanRepoistory.save(loan);
     }

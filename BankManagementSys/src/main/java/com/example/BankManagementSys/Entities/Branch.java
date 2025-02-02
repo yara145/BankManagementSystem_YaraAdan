@@ -1,5 +1,8 @@
 package com.example.BankManagementSys.Entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
@@ -22,13 +25,17 @@ public class Branch implements Serializable {
     private String location;
 
     @JoinColumn(name = "bank_id")
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference
     private Bank bank;
+
     @ToString.Exclude
-    @OneToMany(mappedBy = "branch")
+    @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<BankAccount> bankAccounts;
 
+    @ToString.Exclude
     @ManyToMany(mappedBy = "branches")
+    @JsonIgnore
     private List<Employee> employees;
-
 }

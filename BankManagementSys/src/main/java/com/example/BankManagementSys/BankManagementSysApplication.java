@@ -164,21 +164,27 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		System.out.println(withdrawalService.connectTransactionToBank(withdrawal, existingBankAccount.getId()));
 
 		System.out.println("*********** Loan **********\n");
-
 // ✅ Loan
 		Loan loan = new Loan();
-		loan.setEndPaymentDate(new Date());
+
+// Set start date to tomorrow
+		Date startPaymentDate = new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24)); // Tomorrow
+		loan.setStartPaymentDate(startPaymentDate);
+
+// Set end date to 30 days after the start date
+		Date endPaymentDate = new Date(startPaymentDate.getTime() + (1000L * 60 * 60 * 24 * 30)); // 30 days after tomorrow
+		loan.setEndPaymentDate(endPaymentDate);
+
 		loan.setLoanName("Personal Loan for Yara");
 		loan.setInterestRate(0.3);
 		loan.setLoanAmount(BigDecimal.valueOf(12000));
 		loan.setRemainingBalance(loan.getLoanAmount().doubleValue()); // ✅ Set correct balance
-		loan.setStartPaymentDate(new Date());
 		loan.setBankAccount(existingBankAccount); // 🔥 Link to bank account
 
 		System.out.println(loanService.addNewLoan(loan));
+
 		System.out.println("*********** Print the Loan **********\n" + loan.getTransactionId());
 		System.out.println(loanService.connectLoanToBank(loan, existingBankAccount.getId()));
-
 
 		System.out.println("*********** Loan Payment **********");
 

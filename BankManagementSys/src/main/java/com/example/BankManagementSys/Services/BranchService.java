@@ -52,21 +52,37 @@ public class BranchService {
     }
 
     // __________________________________ BANK ACCOUNT TO BRANCH __________________________________
-   @Transactional
-    public void addBankAccountToBranch(Integer branchId, BankAccount bankAccount) {
-        Optional<Branch> branchOptional = branchRepository.findById(branchId);
-        if (branchOptional.isEmpty()) {
+    @Transactional
+    public void addBankAccountToBranch(int branchId, BankAccount bankAccount) {
+        // Fetch the branch from the repository (ensures it's managed)
+        Branch branch = getBranchById(branchId);
+        if (branch == null) {
             throw new IllegalArgumentException("Branch not found.");
         }
-        Branch branch = branchOptional.get();
+
+        // Check if the bank account already exists (optional, based on your logic)
+        if (bankAccount.getId() > 0) {
+            bankAccount = bankAccountService.getBankAccountById(bankAccount.getId());
+            if (bankAccount == null) {
+                throw new IllegalArgumentException("Bank account not found.");
+            }
+        }
+
+        // Associate the bank account with the branch
         bankAccount.setBranch(branch);
 
-        // Updated method call
-        bankAccountService.updateBankAccount(bankAccount);
+        // Save the bank account (ensures it's managed)
+        bankAccount = bankAccountService.saveBankAccount(bankAccount);
 
+        // Add the bank account to the branch's list
         branch.getBankAccounts().add(bankAccount);
-        System.out.println("Bank accounts for branch " + branch.getName() + ": " + branch.getBankAccounts());
+
+        // Save the branch (ensures the relationship is persisted)
+       saveBranch(branch);
+
+        System.out.println("**** BankAccount Has Been Added to Branch ****");
     }
+
 
     public Branch getBranchById(int branchId) {
         return branchRepository.findById(branchId)
@@ -77,4 +93,14 @@ public class BranchService {
         Branch branch = getBranchById(branchId);
         return branch.getBankAccounts();
     }
+    @Transactional
+    public Branch saveBranch(Branch branch) {
+        if (branch.getId() > 0 && branchRepository.existsById(branch.getId())) {
+            // Check if the ID is greater than 0 (indicating a valid existing entity)
+            return branchRepository.save(branch); // Update if exists
+        }
+        return branchRepository.save(branch); // Create new if doesn't exist
+    }
+
+
 }

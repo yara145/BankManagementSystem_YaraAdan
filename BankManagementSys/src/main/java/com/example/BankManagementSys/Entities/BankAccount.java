@@ -1,7 +1,8 @@
 package com.example.BankManagementSys.Entities;
 
 import com.example.BankManagementSys.Enums.BankAccountStatus;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
@@ -21,39 +22,40 @@ public class BankAccount implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    // Adding the date of creation
     @Column(name = "created_date", nullable = false, updatable = false)
     private LocalDateTime createdDate;
 
-    // Constructor to initialize the creation date
     @PrePersist
     public void onPrePersist() {
-        this.createdDate = LocalDateTime.now(); // set the current date
+        this.createdDate = LocalDateTime.now();
     }
+
     @Column(name = "account_type", nullable = false)
     private String type;
 
-    @Column(name = "balance")//it can be null at first
+    @Column(name = "balance")
     private BigDecimal balance;
 
-    @Enumerated(EnumType.STRING)  // This stores the enum as a string in the database
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private BankAccountStatus status;
 
     @JoinColumn(name = "branch_id")
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference
     private Branch branch;
 
     @JoinColumn(name = "customer_id")
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonBackReference
     private Customer customer;
 
     @ManyToMany(mappedBy = "bankAccounts")
+    @JsonIgnore
     private List<Employee> employees;
 
-
-    @OneToMany(mappedBy = "bankAccount")
+    @OneToMany(mappedBy = "bankAccount", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
+    @JsonIgnore
     private List<Transaction> transactions;
-
 }

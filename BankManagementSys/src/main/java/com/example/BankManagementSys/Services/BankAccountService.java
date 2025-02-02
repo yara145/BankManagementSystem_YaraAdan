@@ -39,15 +39,22 @@ public class BankAccountService {
         System.out.println("******************bank account created successfully************");
         return bankAccountRepository.save(account);
     }
-
+    public BankAccount saveBankAccount(BankAccount bankAccount) {
+        // Check if the account already exists by ID
+        if (bankAccount.getId() > 0) {
+            return updateBankAccount(bankAccount); // Update if exists
+        } else {
+            return createNewBankAccount(bankAccount); // Create new if doesn't exist
+        }
+    }
     /**
      * Update an existing BankAccount's details.
      */
-    public void updateBankAccount(BankAccount account) { // Updated method name to follow Java conventions
+    public BankAccount updateBankAccount(BankAccount account) { // Updated method name to follow Java conventions
         if (account.getBalance().compareTo(overdraftLimit) < 0) {
             throw new IllegalArgumentException("Balance exceeds the overdraft limit of " + overdraftLimit);
         }
-        bankAccountRepository.save(account);
+        return bankAccountRepository.save(account);
     }
 
     /**

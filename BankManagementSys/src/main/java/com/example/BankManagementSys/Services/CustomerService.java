@@ -1,9 +1,9 @@
 package com.example.BankManagementSys.Services;
 
-import com.example.BankManagementSys.Entities.Bank;
 import com.example.BankManagementSys.Entities.BankAccount;
+import com.example.BankManagementSys.Entities.Branch;
 import com.example.BankManagementSys.Entities.Customer;
-import com.example.BankManagementSys.Enums.BankAccountStatus;
+import com.example.BankManagementSys.Reposityories.BranchRepository;
 import com.example.BankManagementSys.Reposityories.CustomerRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,21 +15,24 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class CustomerService extends UserService{
+public class CustomerService extends UserService {
+
     @Value("${customer.min-age}")
     private int minCustomerAge;
 
     @Autowired
     private CustomerRepository customerRepository;
+
     @Autowired
     private BankAccountService bankAccountService;
-
-
+    @Autowired
+    private BranchRepository branchRepository;
     //________________________________C.R.U.D Functions___________________
+
     public Customer addNewCustomer(Customer customer) throws IllegalArgumentException {
         // Validate shared attributes using UserService
         validateUser(customer);
-        //check if the age is legal
+        // Check if the age is legal
         int age = customerRepository.calculateAge(customer.getBirthdate());
         if (age < minCustomerAge) {
             throw new IllegalArgumentException("Customer's age is below the minimum required: " + minCustomerAge);
@@ -37,7 +40,7 @@ public class CustomerService extends UserService{
         // Set the join date to today
         customer.setJoinDate(new Date());
         System.out.println("******************Customer created successfully************");
-        //  Save the new customer
+        // Save the new customer
         return this.customerRepository.save(customer);
     }
 
@@ -49,6 +52,7 @@ public class CustomerService extends UserService{
     public List<Customer> getAllCustomers() {
         return this.customerRepository.findAll();
     }
+
     public void deleteCustomer(Long customerId) {
         Customer existingCustomer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found."));
@@ -61,24 +65,47 @@ public class CustomerService extends UserService{
         // If no bank accounts, delete the customer
         customerRepository.deleteById(customerId);
     }
+
+    // ✅ Get customer by ID
+    public Customer getCustomerById(Long customerId) {
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found with ID: " + customerId));
+    }
+
     //________________________________Bank Account to customer___________________
+
     @Transactional
     public void addBankAccountToCustomer(Long customerId, BankAccount bankAccount) {
-        Optional<Customer> customerOptional = this.customerRepository.findById(customerId);
-        if(customerOptional.isEmpty())
-        {
-            throw new IllegalArgumentException("Customer not found.");
+        // Fetch customer from the repository (ensures it's managed)
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found."));
+
+        // Set the customer reference
+        bankAccount.setCustomer(customer);
+
+        // If branch is assigned, fetch it first to ensure it's managed
+        if (bankAccount.getBranch() != null) {
+            Branch branch = branchRepository.findById(bankAccount.getBranch().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Branch not found."));
+            bankAccount.setBranch(branch);
         }
-       bankAccount.setCustomer(customerOptional.get());
-        bankAccountService.updateBankAccount(bankAccount);
-        customerOptional.get().getBankAccounts().add(bankAccount);
-        System.out.println(customerOptional.get().getBankAccounts());
-        System.out.println("****BankAccount Has Been added to customer****");
+
+        // Save the bank account (ensures it is managed)
+        bankAccount = bankAccountService.updateBankAccount(bankAccount);
+
+        // Add the managed bank account to the customer
+        customer.getBankAccounts().add(bankAccount);
+
+        // Save customer to persist relationship
+        customerRepository.save(customer);
+
+        System.out.println("**** BankAccount Has Been Added to Customer ****");
     }
-    public List<BankAccount> getBankAccountsForCustomer(Long customerId) {//*gettings bankaccounts for the customer
+
+
+    public List<BankAccount> getBankAccountsForCustomer(Long customerId) { //*gettings bankaccounts for the customer
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found."));
         return customer.getBankAccounts();
     }
-
 }

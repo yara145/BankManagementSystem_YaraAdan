@@ -65,19 +65,24 @@ public class BankService {
     //__________________________________BranchToBank______________________
     @Transactional
     public void addBranchToBank(int bankId, Branch branch) {
-        Optional<Bank> bankOptional = this.bankRepository.findById(bankId);
-        if(bankOptional.isEmpty())
-        {
-            throw new IllegalArgumentException("bank not found.");
-        }
-        if (branch.getBank() != null) {
-            throw new IllegalStateException("Branch is already associated with another bank.");
-        }
-        branch.setBank(bankOptional.get());
-        branchService.updateBranch(branch);
-        bankOptional.get().getBranches().add(branch);
-        System.out.println(bankOptional.get().getBranches());
+        // Fetch bank using service instead of repository
+        Bank bank = getBankById(bankId);
+
+        // Set the bank reference
+        branch.setBank(bank);
+
+        // Use branchService to save the branch (instead of repository)
+        branch = branchService.saveBranch(branch);
+
+        // Add the branch to the bank's list
+        bank.getBranches().add(branch);
+
+        // Save the bank to persist the relationship (use service if needed)
+        bankRepository.save(bank);
+
+        System.out.println("**** Branch Has Been Added to Bank ****");
     }
+
     public List<Branch> getBranchesForBank(int bankId) {
         Bank bank = bankRepository.findById(bankId)
                 .orElseThrow(() -> new IllegalArgumentException("Bank with ID " + bankId + " does not exist."));

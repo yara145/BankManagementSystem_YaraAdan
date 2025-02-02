@@ -8,8 +8,8 @@ import java.util.Date;
 
 @Data
 @Entity
-@Table(name = "users") // Defines the shared parent table
-@Inheritance(strategy = InheritanceType.JOINED) // Normalized strategy
+@Table(name = "users")
+@Inheritance(strategy = InheritanceType.JOINED)
 public abstract class User implements Serializable {
 
     @Id
