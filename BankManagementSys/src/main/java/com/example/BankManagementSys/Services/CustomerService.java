@@ -3,6 +3,7 @@ package com.example.BankManagementSys.Services;
 import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Branch;
 import com.example.BankManagementSys.Entities.Customer;
+import com.example.BankManagementSys.Exceptions.CustomerNotFoundException;
 import com.example.BankManagementSys.Reposityories.BranchRepository;
 import com.example.BankManagementSys.Reposityories.CustomerRepository;
 import jakarta.transaction.Transactional;
@@ -94,14 +95,11 @@ public class CustomerService extends UserService {
 
     public void deleteCustomer(Long customerId) {
         Customer existingCustomer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new IllegalArgumentException("Customer not found."));
+                .orElseThrow(() -> new CustomerNotFoundException("Customer with ID " + customerId + " not found."));
 
-        // Check if the customer has associated bank accounts
         if (!existingCustomer.getBankAccounts().isEmpty()) {
             throw new IllegalStateException("Cannot delete a customer with associated bank accounts.");
         }
-
-        // If no bank accounts, delete the customer
         customerRepository.deleteById(customerId);
     }
 
@@ -146,4 +144,31 @@ public class CustomerService extends UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found."));
         return customer.getBankAccounts();
     }
+    public Customer getCustomerByUsername(String username) {
+        return customerRepository.findByUserName(username)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with username: " + username));
+    }
+
+    public Customer getCustomerByEmail(String email) {
+        return customerRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with email: " + email));
+    }
+    public List<BankAccount> getBankAccountsForUsername(String username) {
+        Customer customer = customerRepository.findByUserName(username)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer with username '" + username + "' not found."));
+
+        return customer.getBankAccounts();
+    }
+    // ✅ Delete customer by username
+    public void deleteCustomerByUsername(String username) {
+        Customer customer = customerRepository.findByUserName(username)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer with username '" + username + "' not found."));
+
+        if (!customer.getBankAccounts().isEmpty()) {
+            throw new IllegalStateException("Cannot delete a customer with associated bank accounts.");
+        }
+
+        customerRepository.delete(customer);
+    }
+
 }

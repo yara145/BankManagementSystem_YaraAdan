@@ -3,100 +3,112 @@ package com.example.BankManagementSys.Services;
 import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Branch;
 import com.example.BankManagementSys.Entities.Employee;
+import com.example.BankManagementSys.Exceptions.EmployeeNotFoundException;
+import com.example.BankManagementSys.Reposityories.BranchRepository;
 import com.example.BankManagementSys.Reposityories.EmployeeRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class EmployeeService extends UserService{
+public class EmployeeService extends UserService {
 
     @Autowired
     private EmployeeRepository employeeRepository;
 
-
-
     @Autowired
-    private BranchService branchService;
+    private BranchRepository branchRepository;
 
-    @Autowired
-    @Lazy // Avoid circular dependency
-    private ManyToManyRelationService relationService;
+    // ✅ Get Employee by ID with Error Handling
+    public Employee getEmployeeById(Long id) {
+        return employeeRepository.findById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID " + id + " not found."));
+    }
 
-    // ___________________________C.R.U.D Functions_________________________
+    // ✅ Get Employee by Username with Error Handling
+    public Employee getEmployeeByUsername(String username) {
+        return employeeRepository.findByUserName(username)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee with username '" + username + "' not found."));
+    }
+
+    // ✅ Add Employee
     public Employee addNewEmployee(Employee employee) {
-      validateUser(employee);
-
-        if (employee.getStartDate() == null) {
-            throw new IllegalArgumentException("Start date is required for employees.");
-        }
-
         return employeeRepository.save(employee);
     }
 
+    // ✅ Update Employee
     public void updateEmployee(Employee employee) {
         if (!employeeRepository.existsById(employee.getIdCode())) {
-            throw new IllegalArgumentException("Employee not found with ID: " + employee.getIdCode());
+            throw new EmployeeNotFoundException("Employee with ID " + employee.getIdCode() + " not found.");
         }
+        employeeRepository.save(employee);
+    }
+
+    // ✅ Delete Employee with Error Handling
+    public void deleteEmployeeAndCleanup(Long id) {
+        Employee employee = getEmployeeById(id);
+        employeeRepository.delete(employee);
+    }
+
+    // ✅ Assign Bank Account to Employee (With Error Handling)
+    @Transactional
+    public void addBankAccountToEmployee(Long id, BankAccount bankAccount) {
+        Employee employee = getEmployeeById(id);
+
+        if (employee.getBankAccounts().contains(bankAccount)) {
+            throw new IllegalStateException("Bank account is already assigned to this employee.");
+        }
+
+        employee.getBankAccounts().add(bankAccount);
+        employeeRepository.save(employee);
+    }
+
+    // ✅ Remove Bank Account from Employee (With Error Handling)
+    @Transactional
+    public void removeBankAccountFromEmployee(Long id, BankAccount bankAccount) {
+        Employee employee = getEmployeeById(id);
+
+        if (!employee.getBankAccounts().contains(bankAccount)) {
+            throw new IllegalStateException("Bank account is not assigned to this employee.");
+        }
+
+        employee.getBankAccounts().remove(bankAccount);
+        employeeRepository.save(employee);
+    }
+
+    // ✅ Assign Employee to Branch (With Error Handling)
+    @Transactional
+    public void addBranchToEmployee(Long id, Branch branch) {
+        Employee employee = getEmployeeById(id);
+        Branch existingBranch = branchRepository.findById(branch.getId())
+                .orElseThrow(() -> new IllegalStateException("Branch not found."));
+
+        if (employee.getBranches().contains(existingBranch)) {
+            throw new IllegalStateException("Employee is already assigned to this branch.");
+        }
+
+        employee.getBranches().add(existingBranch);
+        employeeRepository.save(employee);
+    }
+
+    // ✅ Remove Employee from Branch (With Error Handling)
+    @Transactional
+    public void removeBranchFromEmployee(Long id, Branch branch) {
+        Employee employee = getEmployeeById(id);
+        Branch existingBranch = branchRepository.findById(branch.getId())
+                .orElseThrow(() -> new IllegalStateException("Branch not found."));
+
+        if (!employee.getBranches().contains(existingBranch)) {
+            throw new IllegalStateException("Employee is not assigned to this branch.");
+        }
+
+        employee.getBranches().remove(existingBranch);
         employeeRepository.save(employee);
     }
 
     public List<Employee> getAllEmployees() {
         return employeeRepository.findAll();
-    }
-
-    public void deleteEmployeeAndCleanup(Long employeeId) {
-        Employee employee = getEmployeeById(employeeId);
-
-        for (Branch branch : employee.getBranches()) {
-            branch.getEmployees().remove(employee);
-            branchService.updateBranch(branch);
-        }
-
-        employeeRepository.delete(employee);
-    }
-
-    // _________________________BankAccountToEmployee_______________________
-    public void addBankAccountToEmployee(Long employeeId, BankAccount bankAccount) {
-        relationService.addEmployeeToBankAccount(employeeId, bankAccount.getId());
-    }
-
-    public void removeBankAccountFromEmployee(Long employeeId, BankAccount bankAccount) {
-        relationService.removeEmployeeFromBankAccount(employeeId, bankAccount.getId());
-    }
-
-    // _________________________BranchToEmployee_________________________
-    @Transactional
-    public void addBranchToEmployee(Long employeeId, Branch branch) {
-        Employee employee = getEmployeeById(employeeId);
-
-        if (!employee.getBranches().contains(branch)) {
-            employee.getBranches().add(branch);
-        }
-
-        if (!branch.getEmployees().contains(employee)) {
-            branch.getEmployees().add(employee);
-        }
-
-        employeeRepository.save(employee);
-        branchService.updateBranch(branch);
-    }
-
-    public void removeBranchFromEmployee(Long employeeId, Branch branch) {
-        Employee employee = getEmployeeById(employeeId);
-
-        employee.getBranches().remove(branch);
-        branch.getEmployees().remove(employee);
-
-        employeeRepository.save(employee);
-        branchService.updateBranch(branch);
-    }
-
-    public Employee getEmployeeById(Long employeeId) {
-        return employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found with ID: " + employeeId));
     }
 }

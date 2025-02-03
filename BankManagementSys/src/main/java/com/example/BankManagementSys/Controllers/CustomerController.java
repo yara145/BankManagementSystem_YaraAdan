@@ -2,9 +2,12 @@ package com.example.BankManagementSys.Controllers;
 
 import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Customer;
+import com.example.BankManagementSys.Exceptions.BankAccountNotFoundException;
 import com.example.BankManagementSys.Exceptions.CustomerNotFoundException;
+import com.example.BankManagementSys.Services.BankAccountService;
 import com.example.BankManagementSys.Services.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,12 +19,12 @@ public class CustomerController {
 
     @Autowired
     private CustomerService customerService;
-
+    @Autowired
+    private BankAccountService bankAccountService;
     @GetMapping("getAll")
     public ResponseEntity<List<Customer>> getAllCustomers() {
         return ResponseEntity.ok(customerService.getAllCustomers());
     }
-
     @GetMapping("get/{id}")
     public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
         Customer customer = customerService.getCustomerById(id);
@@ -59,9 +62,55 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.getBankAccountsForCustomer(id));
     }
 
-    @PostMapping("add/{id}/accounts")
-    public ResponseEntity<String> addBankAccount(@PathVariable Long id, @RequestBody BankAccount bankAccount) {
-        customerService.addBankAccountToCustomer(id, bankAccount);
-        return ResponseEntity.ok("Bank account added to customer successfully.");
+
+    @GetMapping("get/username/{username}")
+    public ResponseEntity<Customer> getCustomerByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(customerService.getCustomerByUsername(username));
     }
+
+    @GetMapping("get/email/{email}")
+    public ResponseEntity<Customer> getCustomerByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(customerService.getCustomerByEmail(email));
+    }
+    // ✅ Delete customer by username
+    @DeleteMapping("delete/username/{username}")
+    public ResponseEntity<String> deleteCustomerByUsername(@PathVariable String username) {
+        customerService.deleteCustomerByUsername(username);
+        return ResponseEntity.ok("Customer with username '" + username + "' deleted successfully.");
+    }
+
+    // ✅ Get bank accounts by username
+    @GetMapping("get/username/{username}/accounts")
+    public ResponseEntity<List<BankAccount>> getBankAccountsByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(customerService.getBankAccountsForUsername(username));
+    }
+
+    @PutMapping("connect/{customerId}/bankAccount/{accountId}")
+    public ResponseEntity<String> connectBankAccountToCustomer(
+            @PathVariable Long customerId,
+            @PathVariable int accountId) {
+        try {
+            // Fetch customer
+            Customer customer = customerService.getCustomerById(customerId);
+            if (customer == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Customer with ID " + customerId + " not found.");
+            }
+
+            // Fetch bank account
+            BankAccount bankAccount = bankAccountService.getBankAccountById(accountId);
+            if (bankAccount == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Bank account with ID " + accountId + " not found.");
+            }
+
+            // Connect the bank account to the customer
+            customerService.addBankAccountToCustomer(customerId, bankAccount);
+            return ResponseEntity.ok("Bank account successfully linked to customer ID " + customerId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+
 }

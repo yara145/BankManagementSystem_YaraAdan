@@ -78,4 +78,5 @@ public class BankAccountController {
     public ResponseEntity<List<BankAccount>> getBankAccountsByBranch(@PathVariable int branchId) {
         return ResponseEntity.ok(bankAccountService.getBankAccountsByBranchId(branchId));
     }
+
 }

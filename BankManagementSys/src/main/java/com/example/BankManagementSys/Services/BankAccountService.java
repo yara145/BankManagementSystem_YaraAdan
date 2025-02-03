@@ -3,6 +3,7 @@ package com.example.BankManagementSys.Services;
 import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Customer;
 import com.example.BankManagementSys.Enums.BankAccountStatus;
+import com.example.BankManagementSys.Exceptions.BankAccountNotFoundException;
 import com.example.BankManagementSys.Reposityories.BankAccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,7 +82,7 @@ public class BankAccountService {
      */
     public BankAccount getBankAccountById(int bankAccountId) {
         return bankAccountRepository.findById(bankAccountId)
-                .orElseThrow(() -> new IllegalArgumentException("BankAccount not found with ID: " + bankAccountId));
+                .orElseThrow(() -> new BankAccountNotFoundException("BankAccount with ID " + bankAccountId + " not found."));
     }
 
     /**
@@ -118,32 +119,32 @@ public class BankAccountService {
 
             // Validate account status
             if (account.getStatus() != BankAccountStatus.ACTIVE) {
-                System.err.println("❌ Transaction failed: Account is not active.");
+                System.err.println(" Transaction failed: Account is not active.");
                 return false;
             }
 
             // Ensure positive transaction amount (assuming validation is done before calling this)
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                System.err.println("❌ Transaction failed: Amount must be greater than zero.");
+                System.err.println(" Transaction failed: Amount must be greater than zero.");
                 return false;
             }
 
             if (isDeposit) {
                 // Perform deposit
                 account.setBalance(account.getBalance().add(amount));
-                System.out.println("✅ Deposit successful. New balance: " + account.getBalance());
+                System.out.println(" Deposit successful. New balance: " + account.getBalance());
             } else {
                 // ** Check Overdraft Limit (Only for Regular Withdrawals) **
                 BigDecimal newBalance = account.getBalance().subtract(amount);
 
                 if (!isLoanPayment && newBalance.compareTo(overdraftLimit) < 0) {
-                    System.err.println("❌ Transaction failed: Overdraft limit exceeded.");
+                    System.err.println(" Transaction failed: Overdraft limit exceeded.");
                     return false;
                 }
 
                 // Perform withdrawal
                 account.setBalance(newBalance);
-                System.out.println("✅ Withdrawal successful. New balance: " + account.getBalance());
+                System.out.println(" Withdrawal successful. New balance: " + account.getBalance());
             }
 
             // Update the account balance in the database
@@ -154,7 +155,7 @@ public class BankAccountService {
 
         } catch (Exception e) {
             // Catch all exceptions and return failure
-            System.err.println("⚠️ Unexpected error: " + e.getMessage());
+            System.err.println(" Unexpected error: " + e.getMessage());
             return false;
         }
 

@@ -17,6 +17,17 @@ public class ControllersExceptionHandler {
     public ResponseEntity<String> handleBankAccountNotFoundException(BankAccountNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Bank account not found.");
     }
+    @ExceptionHandler(EmployeeNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<String> handleEmployeeNotFoundException(EmployeeNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseEntity<String> handleIllegalStateException(IllegalStateException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
 
     @ExceptionHandler(BranchNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -53,4 +64,5 @@ public class ControllersExceptionHandler {
     public ResponseEntity<String> handleGeneralException(Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
     }
+
 }
