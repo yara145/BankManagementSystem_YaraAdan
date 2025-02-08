@@ -52,6 +52,8 @@ public class ControllersExceptionHandler {
                 errorMessage = "A user with this email already exists.";
             } else if (rootCause.getMessage().contains("userName")) {
                 errorMessage = "A user with this username already exists.";
+            }else if (rootCause.getMessage().contains("idNumber")) {  // ✅ Check for duplicate ID numbers
+                errorMessage = "A user with this ID number already exists.";
             }
         }
 

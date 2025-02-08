@@ -111,4 +111,10 @@ public class EmployeeService extends UserService {
     public List<Employee> getAllEmployees() {
         return employeeRepository.findAll();
     }
+    // ✅ Get Employee ID by Username
+    public Long getEmployeeIdByUsername(String username) {
+        Employee employee = employeeRepository.findByUserName(username)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with username: " + username));
+        return employee.getIdCode();
+    }
 }

@@ -29,17 +29,20 @@ public class BankAccountService {
      */
     public BankAccount createNewBankAccount(BankAccount account) {
         if (account.getStatus() == null) {
-            account.setStatus(BankAccountStatus.ACTIVE); // Default status is ACTIVE
+            account.setStatus(BankAccountStatus.ACTIVE);
         }
         if (account.getBalance() == null) {
-            account.setBalance(BigDecimal.ZERO); // Default balance is 0
+            account.setBalance(BigDecimal.ZERO);
         }
         if (account.getCreatedDate() == null) {
-            account.setCreatedDate(LocalDateTime.now()); // Default creation date is now
+            account.setCreatedDate(LocalDateTime.now());
         }
-        System.out.println("******************bank account created successfully************");
+
+        // 🚀 Do NOT set branch or customer here (optional)
+        System.out.println("✅ Bank account created successfully");
         return bankAccountRepository.save(account);
     }
+
     public BankAccount saveBankAccount(BankAccount bankAccount) {
         // Check if the account already exists by ID
         if (bankAccount.getId() > 0) {

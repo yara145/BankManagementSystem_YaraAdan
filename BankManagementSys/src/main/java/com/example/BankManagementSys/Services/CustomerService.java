@@ -170,5 +170,25 @@ public class CustomerService extends UserService {
 
         customerRepository.delete(customer);
     }
+    // ✅ Disconnect Bank Account from Customer
+    @Transactional
+    public void removeBankAccountFromCustomer(Long customerId, int bankAccountId) {
+        BankAccount bankAccount = bankAccountService.getBankAccountById(bankAccountId);
+        Customer customer = getCustomerById(customerId);
 
+        if (bankAccount.getCustomer() == null || !bankAccount.getCustomer().equals(customer)) {
+            throw new IllegalArgumentException("Bank account is not linked to this customer.");
+        }
+
+        bankAccount.setCustomer(null);
+        bankAccountService.updateBankAccount(bankAccount);
+
+        System.out.println("Bank Account " + bankAccountId + " unlinked from Customer " + customerId);
+    }
+    // ✅ Get Customer ID by Username
+    public Long getCustomerIdByUsername(String username) {
+        Customer customer = customerRepository.findByUserName(username)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found with username: " + username));
+        return customer.getIdCode();
+    }
 }

@@ -39,6 +39,12 @@ public class EmployeeController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+    // ✅ Get Employee ID by Username
+    @GetMapping("get/id/username/{username}")
+    public ResponseEntity<Long> getEmployeeIdByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(employeeService.getEmployeeIdByUsername(username));
+    }
+
 
     // ✅ Removes an employee from a bank account.
     @DeleteMapping("disconnect/{employeeId}/bankAccount/{bankAccountId}")

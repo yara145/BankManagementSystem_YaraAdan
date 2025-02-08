@@ -24,30 +24,30 @@ public class UserService {
 
     public void validateUser(User user) {
         try {
-            if (!user.getIdNumber().matches("\\d{9}")) {
-                throw new IllegalArgumentException("ID number must be exactly 9 digits.");
-            }
-            // Validate Email Format
+
+
+
+            // ✅ Validate Email Format & Uniqueness
             if (!EMAIL_PATTERN.matcher(user.getEmail()).matches()) {
                 throw new IllegalArgumentException("Invalid email format.");
             }
+            if (!userRepository.findUsersByEmailEquals(user.getEmail()).isEmpty()) {
+                throw new IllegalArgumentException("Email already exists.");
+            }
 
-            // Validate First & Last Name (Only letters)
+            // ✅ Validate First & Last Name
             if (!NAME_PATTERN.matcher(user.getFirstName()).matches()) {
-                throw new IllegalArgumentException("First name must contain only letters.");
+                throw new IllegalArgumentException("name must contain only letters.");
             }
 
-            if (!NAME_PATTERN.matcher(user.getLastName()).matches()) {
-                throw new IllegalArgumentException("Last name must contain only letters.");
-            }
+            // ✅ Validate Username Uniqueness
             if (!userRepository.findUsersByUserNameEquals(user.getUserName()).isEmpty()) {
                 throw new IllegalArgumentException("Username already exists.");
             }
-            if (!userRepository.findUsersByIdNumberEquals(user.getIdNumber()).isEmpty()) {
-                throw new IllegalArgumentException("ID number already exists.");
-            }
+
         } catch (IllegalArgumentException e) {
             System.err.println("Validation failed: " + e.getMessage());
+            throw e;
         }
     }
 
@@ -59,8 +59,17 @@ public class UserService {
         return userRepository.getUsersWithSpecificProvider(provider);
     }
 
-    public List<User> findUsersByIdNumberPattern(String pattern) {
-        return userRepository.getUsersWithSpecificIdProvider(pattern);
+
+    //Secuerity
+    public User getUser(String userName){
+        User existingUser=userRepository.findByUserName(userName);
+        if(existingUser!=null){
+            System.out.println("getUser:**********"+existingUser.getUserName()+" ps"+ existingUser.getPassword());
+            return existingUser;
+        }
+        return null;
     }
+
+
 
 }

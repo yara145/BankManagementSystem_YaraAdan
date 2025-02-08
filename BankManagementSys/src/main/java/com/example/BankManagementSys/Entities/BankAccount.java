@@ -42,12 +42,12 @@ public class BankAccount implements Serializable {
 
     @JoinColumn(name = "branch_id")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonBackReference
+    @JsonIgnore
     private Branch branch;
 
     @JoinColumn(name = "customer_id")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonBackReference
+    @JsonIgnore
     private Customer customer;
 
     @ManyToMany(mappedBy = "bankAccounts")

@@ -30,11 +30,15 @@ public class BankAccountController {
         BankAccount bankAccount = bankAccountService.getBankAccountById(id);
         return ResponseEntity.ok(bankAccount);
     }
-
-    // ✅ Create a new bank account
     @PostMapping("add")
     public ResponseEntity<BankAccount> createBankAccount(@RequestBody BankAccount bankAccount) {
-        return ResponseEntity.ok(bankAccountService.createNewBankAccount(bankAccount));
+        // Create new bank account with only required fields
+        BankAccount newAccount = new BankAccount();
+        newAccount.setType(bankAccount.getType());
+        newAccount.setBalance(bankAccount.getBalance());
+        newAccount.setStatus(bankAccount.getStatus());
+
+        return ResponseEntity.ok(bankAccountService.createNewBankAccount(newAccount));
     }
 
     // ✅ Update bank account details

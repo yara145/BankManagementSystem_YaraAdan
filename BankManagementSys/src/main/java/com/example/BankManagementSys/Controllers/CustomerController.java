@@ -111,6 +111,35 @@ public class CustomerController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+    // ✅ Disconnect Bank Account from Customer
+    @DeleteMapping("disconnect/{customerId}/bankAccount/{accountId}")
+    public ResponseEntity<String> disconnectBankAccountFromCustomer(
+            @PathVariable Long customerId, @PathVariable int accountId) {
+        try {
+            Customer customer = customerService.getCustomerById(customerId);
+            if (customer == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Customer with ID " + customerId + " not found.");
+            }
+
+            BankAccount bankAccount = bankAccountService.getBankAccountById(accountId);
+            if (bankAccount == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Bank account with ID " + accountId + " not found.");
+            }
+
+            customerService.removeBankAccountFromCustomer(customerId, accountId);
+            return ResponseEntity.ok("Bank account successfully unlinked from customer ID " + customerId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+    // ✅ Get Customer ID by Username
+    @GetMapping("get/id/username/{username}")
+    public ResponseEntity<Long> getCustomerIdByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(customerService.getCustomerIdByUsername(username));
+    }
+
 
 
 }

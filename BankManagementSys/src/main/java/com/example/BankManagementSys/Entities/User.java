@@ -19,14 +19,9 @@ public abstract class User implements Serializable {
     @Column(name = "user_name", nullable = false, unique = true)
     private String userName;
 
-    @Column(name = "first_name", nullable = false)
+    @Column(name = "name", nullable = false)
     private String firstName;
 
-    @Column(name = "last_name", nullable = false)
-    private String lastName;
-
-    @Column(name = "id_number", nullable = false, unique = true)
-    private String idNumber;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
