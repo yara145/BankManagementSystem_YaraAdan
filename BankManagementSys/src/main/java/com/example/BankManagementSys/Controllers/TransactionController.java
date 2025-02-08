@@ -1,14 +1,12 @@
 package com.example.BankManagementSys.Controllers;
 
-import com.example.BankManagementSys.Entities.LoanPayment;
 import com.example.BankManagementSys.Entities.Transaction;
-import com.example.BankManagementSys.Services.LoanPaymentService;
+import com.example.BankManagementSys.Exceptions.TransactionNotFoundException;
 import com.example.BankManagementSys.Services.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,11 +16,22 @@ public class TransactionController {
     @Autowired
     TransactionService transactionService;
 
+    // ✅ Retrieves all transactions.
     @GetMapping("getAll")
-    public List<Transaction> getAll(){ return transactionService.getAllTransactions();}
+    public ResponseEntity<List<Transaction>> getAll() {
+        List<Transaction> transactions = transactionService.getAllTransactions();
+        return transactions.isEmpty()
+                ? ResponseEntity.status(HttpStatus.NO_CONTENT).body(transactions)
+                : ResponseEntity.ok(transactions);
+    }
 
+    // ✅ Retrieves transactions by bank account ID.
     @GetMapping("get/{bankAccountId}")
-    public List<Transaction> getByBankAccount(@PathVariable int bankAccountId) {
-        return transactionService.getTransactionsByBankAccount(bankAccountId);
+    public ResponseEntity<List<Transaction>> getByBankAccount(@PathVariable int bankAccountId) {
+        List<Transaction> transactions = transactionService.getTransactionsByBankAccount(bankAccountId);
+        if (transactions.isEmpty()) {
+            throw new TransactionNotFoundException("No transactions found for bank account ID " + bankAccountId);
+        }
+        return ResponseEntity.ok(transactions);
     }
 }

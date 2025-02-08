@@ -1,15 +1,13 @@
 package com.example.BankManagementSys.Controllers;
 
-import com.example.BankManagementSys.Entities.DepositTransaction;
-import com.example.BankManagementSys.Entities.Employee;
 import com.example.BankManagementSys.Entities.WithdrawalTransaction;
+import com.example.BankManagementSys.Exceptions.WithdrawalTransactionNotFoundException;
 import com.example.BankManagementSys.Services.WithdrawalTransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -19,100 +17,58 @@ public class WithdrawalController {
     @Autowired
     WithdrawalTransactionService withdrawalService;
 
-
     // ✅ Retrieves all withdrawal transactions.
     @GetMapping("getAll")
-    public List<WithdrawalTransaction> getAllWithdrawals()
-    {
-        return withdrawalService.getAllWithdrawals() ;
+    public ResponseEntity<List<WithdrawalTransaction>> getAllWithdrawals() {
+        List<WithdrawalTransaction> withdrawals = withdrawalService.getAllWithdrawals();
+        return withdrawals.isEmpty()
+                ? ResponseEntity.status(HttpStatus.NO_CONTENT).body(withdrawals)
+                : ResponseEntity.ok(withdrawals);
     }
-
-
 
     // ✅ Retrieves a specific withdrawal transaction by ID.
     @GetMapping("get/{id}")
     public ResponseEntity<WithdrawalTransaction> getWithdrawalById(@PathVariable int id) {
-        return ResponseEntity.ok(withdrawalService.getWithdrawalById(id));
+        WithdrawalTransaction withdrawal = withdrawalService.getWithdrawalById(id);
+        if (withdrawal == null) {
+            throw new WithdrawalTransactionNotFoundException("Withdrawal transaction with ID " + id + " not found.");
+        }
+        return ResponseEntity.ok(withdrawal);
     }
-
 
     // ✅ Adds a new withdrawal transaction.
     @PostMapping("add")
-    public void addWithdrawal(@RequestBody WithdrawalTransaction withdrawal) {
-        this.withdrawalService.addNewWithdrawalTransaction(withdrawal);
+    public ResponseEntity<String> addWithdrawal(@RequestBody WithdrawalTransaction withdrawal) {
+        try {
+            withdrawalService.addNewWithdrawalTransaction(withdrawal);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Withdrawal transaction added successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error adding withdrawal transaction: " + e.getMessage());
+        }
     }
-
 
     // ✅ Links a withdrawal transaction to a bank account.
     @PutMapping("connect/{withdrawalId}/{bankAccountId}")
     public ResponseEntity<String> connectWithdrawalToBank(
             @PathVariable int withdrawalId,
             @PathVariable int bankAccountId) {
-        try {
-            WithdrawalTransaction withdrawal = withdrawalService.getWithdrawalById(withdrawalId);
-            if (withdrawal == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Withdrawal transaction with ID " + withdrawalId + " not found.");
-            }
 
-            WithdrawalTransaction updatedWithdrawal = withdrawalService.connectTransactionToBank(withdrawal, bankAccountId);
-            if (updatedWithdrawal == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Failed to connect withdrawal transaction to bank account. Insufficient balance or other issue.");
-            }
-
-            return ResponseEntity.ok("Withdrawal transaction successfully linked to bank account ID " + bankAccountId);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        WithdrawalTransaction withdrawal = withdrawalService.getWithdrawalById(withdrawalId);
+        if (withdrawal == null) {
+            throw new WithdrawalTransactionNotFoundException("Withdrawal transaction with ID " + withdrawalId + " not found.");
         }
+        withdrawalService.connectTransactionToBank(withdrawal, bankAccountId);
+        return ResponseEntity.ok("Withdrawal transaction successfully linked to bank account ID " + bankAccountId);
     }
-
-
-    // ✅ Deletes a withdrawal transaction by ID.
-    @DeleteMapping("delete/{id}")
-    public ResponseEntity<String> deleteWithdrawal(@PathVariable int id) {
-        try {
-            withdrawalService.DeleteWithdrawalTransaction(id); // Calls the service method to delete
-            return ResponseEntity.ok("Withdrawal transaction with ID " + id + " has been deleted successfully.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
-
 
     // ✅ Retrieves all withdrawals linked to a specific bank account.
     @GetMapping("account/{accountId}")
     public ResponseEntity<List<WithdrawalTransaction>> getWithdrawalsByAccountId(@PathVariable int accountId) {
         List<WithdrawalTransaction> withdrawals = withdrawalService.getWithdrawalsByAccountId(accountId);
-
         if (withdrawals.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(null);
+            throw new WithdrawalTransactionNotFoundException("No withdrawal transactions found for account ID " + accountId);
         }
         return ResponseEntity.ok(withdrawals);
     }
-
-
-
-    // ✅ Updates an existing withdrawal transaction.
-    @PutMapping("update/{id}")
-    public ResponseEntity<String> updateWithdrawal(@PathVariable int id, @RequestBody WithdrawalTransaction updatedWithdrawal) {
-        WithdrawalTransaction existingWithdrawal = withdrawalService.getWithdrawalById(id);
-
-        // ✅ Update only the fields that are not null in the request
-        if (updatedWithdrawal.getWithdrawalAmount() != null) {
-            existingWithdrawal.setWithdrawalAmount(updatedWithdrawal.getWithdrawalAmount());
-        }
-        if (updatedWithdrawal.getDescription() != null) {
-            existingWithdrawal.setDescription(updatedWithdrawal.getDescription());
-        }
-
-        withdrawalService.updateWithdrawalTransaction(existingWithdrawal);
-        return ResponseEntity.ok("Withdrawal transaction updated successfully.");
-    }
-
-
-
-
 }
-

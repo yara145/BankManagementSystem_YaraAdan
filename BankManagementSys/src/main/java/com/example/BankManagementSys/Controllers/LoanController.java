@@ -1,6 +1,7 @@
 package com.example.BankManagementSys.Controllers;
 
 import com.example.BankManagementSys.Entities.Loan;
+import com.example.BankManagementSys.Exceptions.LoanNotFoundException;
 import com.example.BankManagementSys.Services.LoanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,98 +13,59 @@ import java.util.List;
 @RestController
 @RequestMapping("/loans")
 public class LoanController {
+
     @Autowired
     private LoanService loanService;
 
     // ✅ Retrieves all loans.
     @GetMapping("getAll")
-    public List<Loan> getAll() {
-        return loanService.getAllLoans();
+    public ResponseEntity<List<Loan>> getAll() {
+        List<Loan> loans = loanService.getAllLoans();
+        return loans.isEmpty()
+                ? ResponseEntity.status(HttpStatus.NO_CONTENT).body(loans)
+                : ResponseEntity.ok(loans);
     }
 
     // ✅ Retrieves a specific loan by ID.
     @GetMapping("get/{id}")
     public ResponseEntity<Loan> getLoanById(@PathVariable int id) {
-        return ResponseEntity.ok(loanService.getLoanById(id));
+        Loan loan = loanService.getLoanById(id);
+        if (loan == null) {
+            throw new LoanNotFoundException("Loan with ID " + id + " not found.");
+        }
+        return ResponseEntity.ok(loan);
     }
 
     // ✅ Adds a new loan.
     @PostMapping("add")
-    public void addLoan(@RequestBody Loan loan) {
-        loanService.addNewLoan(loan);
+    public ResponseEntity<String> addLoan(@RequestBody Loan loan) {
+        try {
+            loanService.addNewLoan(loan);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Loan added successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error adding loan: " + e.getMessage());
+        }
     }
 
     // ✅ Links a loan to a bank account.
     @PutMapping("connect/{loanId}/{bankAccountId}")
-    public ResponseEntity<String> connectLoanToBank(
-            @PathVariable int loanId,
-            @PathVariable int bankAccountId) {
-        try {
-            Loan loan = loanService.getLoanById(loanId);
-            if (loan == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Loan with ID " + loanId + " not found.");
-            }
-
-            Loan updatedLoan = loanService.connectLoanToBank(loan, bankAccountId);
-            if (updatedLoan == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Failed to connect loan to bank account.");
-            }
-
-            return ResponseEntity.ok("Loan successfully linked to bank account ID " + bankAccountId);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    public ResponseEntity<String> connectLoanToBank(@PathVariable int loanId, @PathVariable int bankAccountId) {
+        Loan loan = loanService.getLoanById(loanId);
+        if (loan == null) {
+            throw new LoanNotFoundException("Loan with ID " + loanId + " not found.");
         }
-    }
-
-    // ✅ Deletes a loan by ID.
-    @DeleteMapping("delete/{id}")
-    public ResponseEntity<String> deleteLoan(@PathVariable int id) {
-        try {
-            loanService.deleteLoanTransaction(id); // Calls the service method to delete
-            return ResponseEntity.ok("Loan with ID " + id + " has been deleted successfully.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+        loanService.connectLoanToBank(loan, bankAccountId);
+        return ResponseEntity.ok("Loan successfully linked to bank account ID " + bankAccountId);
     }
 
     // ✅ Retrieves all loans linked to a specific bank account.
     @GetMapping("account/{accountId}")
     public ResponseEntity<List<Loan>> getLoansByAccountId(@PathVariable int accountId) {
         List<Loan> loans = loanService.getLoansByAccountId(accountId);
-
         if (loans.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(null);
+            throw new LoanNotFoundException("No loans found for account ID " + accountId);
         }
         return ResponseEntity.ok(loans);
     }
-
-    // ✅ Updates an existing loan.
-    @PutMapping("update/{id}")
-    public ResponseEntity<String> updateLoan(@PathVariable int id, @RequestBody Loan updatedLoan) {
-        Loan existingLoan = loanService.getLoanById(id);
-
-        // ✅ Update only the fields that are not null in the request
-        if (updatedLoan.getLoanAmount() != null) {
-            existingLoan.setLoanAmount(updatedLoan.getLoanAmount());
-        }
-        if (updatedLoan.getInterestRate() != null) {
-            existingLoan.setInterestRate(updatedLoan.getInterestRate());
-        }
-        if (updatedLoan.getStartPaymentDate() != null) {
-            existingLoan.setStartPaymentDate(updatedLoan.getStartPaymentDate());
-        }
-        if (updatedLoan.getEndPaymentDate() != null) {
-            existingLoan.setEndPaymentDate(updatedLoan.getEndPaymentDate());
-        }
-        if (updatedLoan.getDescription() != null) {  // ✅ Fix: Update description
-            existingLoan.setDescription(updatedLoan.getDescription());
-        }
-
-        loanService.updateLoan(existingLoan);
-        return ResponseEntity.ok("Loan updated successfully.");
-    }
-
 }

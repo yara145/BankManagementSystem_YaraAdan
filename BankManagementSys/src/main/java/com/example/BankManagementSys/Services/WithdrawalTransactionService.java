@@ -44,51 +44,14 @@ public class WithdrawalTransactionService {
             throw new TransactionAmountInvalidException("Withdrawal amount exceeds the allowed maximum.");
         }
 
-//        // Ensure transaction is linked to a valid bank account
-//        if (withdrawal.getBankAccount() == null) {
-//            throw new IllegalArgumentException("Withdrawal transaction must be linked to a bank account.");
-//        }
-//
-//        int accountId = withdrawal.getBankAccount().getId();
-//
-//        // Update bank account balance
-//        boolean success = bankAccountService.updateBalance(accountId, withdrawal.getWithdrawalAmount(), false, false);
-//        if (!success) {
-//            System.err.println("❌ Withdrawal failed for account ID: " + accountId);
-//            return null; // Do not save the transaction if balance update failed
-//        }
-
-
         withdrawal.setTransactionDateTime(LocalDateTime.now());
 
         return withdrawalRepoistory.save(withdrawal);
     }
 
 
-    //** Update **
-    public WithdrawalTransaction updateWithdrawalTransaction(WithdrawalTransaction withdrawal) {
-
-        if (withdrawal == null ) {
-            throw new IllegalArgumentException("Withdrawl cannot be null.");
-        }
-        if (!withdrawalRepoistory.existsById(withdrawal.getTransactionId())) {
-            throw new IllegalArgumentException("Withdrawal with ID " + withdrawal.getTransactionId() + " does not exist.");
-        }
-        return withdrawalRepoistory.save(withdrawal);
-    }
 
 
-    //** Delete **
-    public void DeleteWithdrawalTransaction(int withdrawalId) {
-        // Find the transaction
-        WithdrawalTransaction withdrawal = withdrawalRepoistory.findByTransactionId(withdrawalId)
-                .orElseThrow(() -> new IllegalArgumentException("Withdrawal with ID " + withdrawalId + " does not exist."));
-
-
-
-        // Perform the delete operation
-        withdrawalRepoistory.delete(withdrawal);
-    }
 
     //** Read **
 

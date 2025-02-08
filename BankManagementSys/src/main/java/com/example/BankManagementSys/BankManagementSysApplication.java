@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -14,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 
 @SpringBootApplication
+//@EnableScheduling // Enable scheduled jobs
 public class BankManagementSysApplication implements CommandLineRunner {
 
 	public static void main(String[] args) {
@@ -42,11 +44,13 @@ public class BankManagementSysApplication implements CommandLineRunner {
 	private LoanService loanService;
 	@Autowired
 	private LoanPaymentService loanPaymentService;
+	@Autowired
+	private  TransferTransactionService transferService;
 
 	@Override
 	public void run(String... args) throws Exception {
 
-		System.out.println("*******create customer*****");
+		System.out.println("*******create customer 1 *****\n");
 		Customer customer = new Customer();
 		customer.setUserName("Adan123");
 		customer.setPassword("1234");
@@ -63,19 +67,37 @@ public class BankManagementSysApplication implements CommandLineRunner {
 			System.err.println("Invalid birthdate format: " + e.getMessage());
 		}
 
-		customer.setIdNumber("111222333");
+
 		customer.setFirstName("Adan");
-		customer.setLastName("Orabi");
+
 
 		// Add customer using the service
 		customerService.addNewCustomer(customer);
 
-		System.out.println("*******bank account*****");
-		BankAccount bankAccount = new BankAccount();
-		bankAccount.setType("personal");
-		bankAccountService.createNewBankAccount(bankAccount);
+		System.out.println("*******create customer 2 *****\n");
 
-		customerService.addBankAccountToCustomer(customer.getIdCode(), bankAccount);
+		Customer customer2 = new Customer();
+		customer2.setUserName("Anne2001");
+		customer2.setPassword("2001");
+		customer2.setEmail("anne@gmail.com");
+		customer2.setAddress("Haifa");
+
+		// Parse birthdate from string
+		String birthdateString2 = "15.2.1990";
+		SimpleDateFormat formatter2 = new SimpleDateFormat("dd.MM.yyyy");
+		try {
+			Date birthdate2 = formatter.parse(birthdateString2);
+			customer2.setBirthdate(birthdate2);
+		} catch (ParseException e) {
+			System.err.println("Invalid birthdate format: " + e.getMessage());
+		}
+
+
+		customer2.setFirstName("Anne");
+
+
+		// Add customer using the service
+		customerService.addNewCustomer(customer2);
 
 		Bank bank = new Bank();
 		bank.setName("MyBank");
@@ -87,7 +109,30 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		branchService.createNewBranch(branch);
 		bankService.addBranchToBank(bank.getId(), branch);
 
+
+
+		System.out.println("*******bank account 1 *****\n");
+		BankAccount bankAccount = new BankAccount();
+		bankAccount.setType("personal");
+		bankAccount.setBalance(BigDecimal.valueOf(2000));
+		bankAccountService.createNewBankAccount(bankAccount);
+
+		customerService.addBankAccountToCustomer(customer.getIdCode(), bankAccount);
+
+
+
+
+
+		System.out.println("*******bank account 2*****\n");
+		BankAccount bankAccount2 = new BankAccount();
+		bankAccount2.setType("personal");
+		bankAccount2.setBalance(BigDecimal.valueOf(1000));
+		bankAccountService.createNewBankAccount(bankAccount2);
+		customerService.addBankAccountToCustomer(customer2.getIdCode(), bankAccount2);
+
+
 		branchService.addBankAccountToBranch(branch.getId(), bankAccount);
+		branchService.addBankAccountToBranch(branch.getId(), bankAccount2);
 
 		Employee employee = new Employee();
 		employee.setUserName("yara123");
@@ -105,9 +150,9 @@ public class BankManagementSysApplication implements CommandLineRunner {
 			System.err.println("Invalid birthdate format: " + e.getMessage());
 		}
 
-		employee.setIdNumber("111222444");
+
 		employee.setFirstName("yara");
-		employee.setLastName("ghaben");
+
 
 		// Set the work start date
 		String startDateString = "01.01.2023";
@@ -128,7 +173,7 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		manyToManyRelationService.addEmployeeToBranch(employee.getIdCode(), branch.getId());
 
 		System.out.println("*************************TRANSACTIONS*******************************\n");
-		System.out.println("*********** deposit **********");
+
 
 // ✅ Ensure the bank account exists
 		BankAccount existingBankAccount = bankAccountService.getBankAccountById(1);
@@ -137,6 +182,8 @@ public class BankManagementSysApplication implements CommandLineRunner {
 			return;
 		}
 
+		//System.out.println("*********** deposits **********");
+/*
 // ✅ Deposit 1
 		DepositTransaction deposit = new DepositTransaction();
 		deposit.setDespositAmount(BigDecimal.valueOf(10000));
@@ -164,7 +211,20 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		System.out.println(withdrawalService.addNewWithdrawalTransaction(withdrawal));
 		System.out.println(withdrawalService.connectTransactionToBank(withdrawal, existingBankAccount.getId()));
 
+*/
 
+
+
+
+		System.out.println("***********Transfer **********\n");
+		TransferTransaction transfer = new TransferTransaction();
+		transfer.setReceiverBankCode(1);
+		transfer.setTransferBranchCode(1);
+		transfer.setReceiverAccountNum(2);
+		transfer.setBankAccount(existingBankAccount);  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+		transfer.setAmount(BigDecimal.valueOf(500));
+		transferService.addNewTransferTransaction(transfer);
+		transferService.connectTransactionToBank(transfer,1);
 		System.out.println("*********** Loan **********\n");
 // ✅ Loan
 		Loan loan = new Loan();
@@ -180,7 +240,7 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		loan.setLoanName("Personal Loan for Yara");
 		loan.setInterestRate(0.3);
 		loan.setNumberOfPayments(5);
-		loan.setLoanAmount(BigDecimal.valueOf(10000));
+		loan.setLoanAmount(BigDecimal.valueOf(50000));
 		loan.setRemainingBalance(loan.getLoanAmount().doubleValue()); // ✅ Set correct balance
 		//loan.setBankAccount(existingBankAccount); // 🔥 Link to bank account
 
@@ -189,17 +249,9 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		System.out.println("*********** Print the Loan **********\n" + loan.getTransactionId());
 		System.out.println(loanService.connectLoanToBank(loan, existingBankAccount.getId()));
 
-		System.out.println("*********** Loan Payment **********");
+		System.out.println("*********** Loan Payments are scheduled  **********");
 
-// ✅ Loan Payment
-		LoanPayment loanPayment = new LoanPayment();
-		loanPayment.setPaymentAmount(1000.0);
-		loanPayment.setLoan(loan); // 🔥 Link to loan
 
-		System.out.println(loanPaymentService.addLoanPayment(loanPayment, loan.getTransactionId()));
-		System.out.println("Print all transactions");
-		List<Transaction> allTransactions = transactionService.getAllTransactions();
-		System.out.println(allTransactions);
 
 	}
 }

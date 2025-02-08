@@ -41,21 +41,26 @@ public class BankAccount implements Serializable {
     private BankAccountStatus status;
 
     @JoinColumn(name = "branch_id")
+    @ToString.Exclude   // exclude branch from bank account
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnore
+    @JsonBackReference
     private Branch branch;
 
     @JoinColumn(name = "customer_id")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnore
+    @ToString.Exclude
+    @JsonBackReference
     private Customer customer;
 
     @ManyToMany(mappedBy = "bankAccounts")
     @JsonIgnore
+    @ToString.Exclude
     private List<Employee> employees;
 
     @OneToMany(mappedBy = "bankAccount", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     @JsonIgnore
     private List<Transaction> transactions;
+
+
 }

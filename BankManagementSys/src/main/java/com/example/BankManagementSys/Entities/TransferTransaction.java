@@ -18,14 +18,14 @@ public class TransferTransaction extends Transaction  {
     @Column(name = "transfer_name")
     private String transferName;
 
-    @Column(name = "transfer_account_num")
-    private int transferAccountNum;
+    @Column(name = "receiver_account_num")  // transfer receiver account num !!!!!!
+    private int receiverAccountNum;
 
     @Column(name = "amount")
     private BigDecimal amount;
 
-    @Column(name = "bank_code")
-    private int transferBankCode;
+    @Column(name = "receiver_bank_code")
+    private int receiverBankCode;
 
     @Column(name = "branch_code")
     private int transferBranchCode;

@@ -36,6 +36,9 @@ public class LoanService {
     @Autowired
     private TransactionService transactionService;
 
+    @Autowired
+    private BankAccountService bankAccountService;
+
     // ************ CRUD ******************
 
     // ** Add **
@@ -91,38 +94,10 @@ public class LoanService {
 
         // Save loan to the repository
         loan.setTransactionDateTime(LocalDateTime.now());
+
         return this.loanRepoistory.save(loan);
     }
 
-    //** Update **
-    public Loan updateLoan(Loan loan)  {
-        if (loan == null ) {
-            throw new IllegalArgumentException("Loan cannot be null.");
-        }
-        if (!loanRepoistory.existsById(loan.getTransactionId())) {
-            throw new IllegalArgumentException("Loan with ID " + loan.getTransactionId() + " does not exist.");
-        }
-
-        // ✅ Ensure `numberOfPayments` is never negative
-        if (loan.getNumberOfPayments() < 0) {
-            loan.setNumberOfPayments(0);
-        }
-        return loanRepoistory.save(loan);
-
-    }
-
-
-
-    //** Delete **
-    public void deleteLoanTransaction(int loanId) {
-
-    Loan loan = loanRepoistory.findById(loanId)
-                .orElseThrow(() -> new IllegalArgumentException("Loan with ID " + loanId + " does not exist."));
-
-        // Perform the delete operation
-        loanRepoistory.delete(loan);
-
-    }
 
     //** Read **
 
@@ -141,7 +116,12 @@ public class LoanService {
     public Loan connectLoanToBank(Loan loan, int bankAccountId) {
         // Connect the transfer to the bank account
         transactionService.connectTransactionToBankAccount(loan, bankAccountId);
-
+        // Update bank account balance
+        boolean success =bankAccountService.updateBalance(bankAccountId, loan.getLoanAmount(), true, false);
+        if (!success) {
+            System.err.println("❌ Deposit failed for account ID: " + bankAccountId);
+            return null; // Do not save the transaction if balance update failed
+        }
 
         // Save and return the transaction
         return loanRepoistory.save(loan);

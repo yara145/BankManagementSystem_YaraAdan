@@ -29,10 +29,11 @@ public class TransferTransactionService {
     private BankAccountService bankAccountService;
     @Autowired
     private BankService bankService;
+    @Autowired DepositTransactionService depositService;
     // ************ CRUD ******************
 
     // ** Add **
-
+    @Transactional
     public TransferTransaction addNewTransferTransaction(TransferTransaction transfer) throws TransactionAmountInvalidException {
         if (transfer == null) {
             throw new IllegalArgumentException("TransferTransaction cannot be null.");
@@ -60,7 +61,7 @@ public class TransferTransactionService {
 
         // Find receiver account
         Optional<BankAccount> receiverAccountOpt = allBankAccounts.stream()
-                .filter(account -> account.getId() == transfer.getTransferAccountNum())
+                .filter(account -> account.getId() == transfer.getReceiverAccountNum())
                 .findFirst();
 
         if (receiverAccountOpt.isEmpty()) {
@@ -76,11 +77,17 @@ public class TransferTransactionService {
         }
 
         // Perform deposit
-        boolean depositSuccess = bankAccountService.updateBalance(receiverAccount.getId(), transfer.getAmount(), true, false);
-        if (!depositSuccess) {
-            System.err.println("❌ Transfer failed: Unable to deposit into receiver's account.");
-            return null;
-        }
+        DepositTransaction deposit = new DepositTransaction();
+        deposit.setBankAccount(receiverAccount);
+        deposit.setDescription("Transfer from account number " + senderAccount.getId() ); // in order to show in user transactions
+        deposit.setDespositAmount(transfer.getAmount());
+        depositService.addNewDepositTransaction(deposit);
+        depositService.connectTransactionToBank(deposit,receiverAccount.getId());  // create new deposit for reciever
+//        boolean depositSuccess = bankAccountService.updateBalance(receiverAccount.getId(), transfer.getAmount(), true, false);
+//        if (!depositSuccess) {
+//            System.err.println("❌ Transfer failed: Unable to deposit into receiver's account.");
+//            return null;
+//        }
 
         // Set transfer status
         transfer.setTransferStatus(TransferStatus.COMPLETED);
@@ -115,27 +122,6 @@ public class TransferTransactionService {
         return account;
     }
 
-
-    //** Update **
-    public TransferTransaction updateTransferTransaction(TransferTransaction transfer) {
-        if (transfer == null ) {
-            throw new IllegalArgumentException("Transfer  cannot be null.");
-        }
-        if (!transferTransactionRepoistory.existsById(transfer.getTransactionId())) {
-            throw new IllegalArgumentException("Transfer with ID " + transfer.getTransactionId() + " does not exist.");
-        }
-        return transferTransactionRepoistory.save(transfer);
-    }
-
-
-    //** Delete **
-
-    public void deleteTransferTransaction(int transferId) {
-        TransferTransaction transfer = transferTransactionRepoistory.findById(transferId)
-                .orElseThrow(() -> new IllegalArgumentException("Transfer with ID " + transferId + " does not exist."));
-        // Perform the delete operation
-        transferTransactionRepoistory.delete(transfer);
-    }
 
     //** Read **
 
