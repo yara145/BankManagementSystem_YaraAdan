@@ -62,5 +62,8 @@ public class BankAccount implements Serializable {
     @JsonIgnore
     private List<Transaction> transactions;
 
+    @Column(name = "currency_code", nullable = false)
+    private String currencyCode = "ILS"; // Default currency is Shekel
+
 
 }
