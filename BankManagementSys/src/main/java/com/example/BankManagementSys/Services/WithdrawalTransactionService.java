@@ -1,9 +1,6 @@
 package com.example.BankManagementSys.Services;
 
-import com.example.BankManagementSys.Entities.DepositTransaction;
-import com.example.BankManagementSys.Entities.Transaction;
-import com.example.BankManagementSys.Entities.TransferTransaction;
-import com.example.BankManagementSys.Entities.WithdrawalTransaction;
+import com.example.BankManagementSys.Entities.*;
 import com.example.BankManagementSys.Enums.TransferStatus;
 
 import com.example.BankManagementSys.Exceptions.TransactionAmountInvalidException;
@@ -15,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,6 +28,9 @@ public class WithdrawalTransactionService {
     private TransactionService transactionService;
     @Autowired
     private BankAccountService bankAccountService;
+
+    @Autowired
+    private CurrencyExchangeService currencyExchangeService; // Injects the CurrencyExchangeService to handle currency exchange operations
     // ************ CRUD ******************
 
     // ** Add **
@@ -75,23 +76,81 @@ public class WithdrawalTransactionService {
         transactionService.connectTransactionToBankAccount(withdrawal, bankAccountId);
 
         // Ensure transaction is linked to a valid bank account
-        if (withdrawal.getBankAccount() == null) {
-            throw new IllegalArgumentException("Withdrawal transaction must be linked to a bank account.");
+        BankAccount account = withdrawal.getBankAccount();
+        if (account == null) {
+            throw new IllegalArgumentException("Withdrawal transaction must be linked to a valid bank account.");
         }
 
-        int accountId = withdrawal.getBankAccount().getId();
+        // ✅ Fixed: Correctly handle currency conversion
+        BigDecimal withdrawalAmount = withdrawal.getWithdrawalAmount();
+        BigDecimal exchangeRate = currencyExchangeService.getExchangeRateForCurrency(withdrawal.getCurrencyCode());
 
-        // Update bank account balance
-        boolean success = bankAccountService.updateBalance(accountId, withdrawal.getWithdrawalAmount(), false, false);
+        if (exchangeRate == null || exchangeRate.compareTo(BigDecimal.ZERO) == 0) {
+            throw new IllegalArgumentException("Invalid exchange rate received for currency: " + withdrawal.getCurrencyCode());
+        }
+
+        // ✅ Fixed: Ensure correct conversion logic based on target currency
+        if (!account.getCurrencyCode().equalsIgnoreCase(withdrawal.getCurrencyCode())) {
+            if (account.getCurrencyCode().equalsIgnoreCase("ILS")) {
+                // ✅ Convert from EUR → ILS (Divide)
+                withdrawalAmount = withdrawalAmount.divide(exchangeRate, 6, RoundingMode.HALF_UP);
+            } else {
+                // ✅ Convert from ILS → Other Currency (Multiply)
+                withdrawalAmount = withdrawalAmount.multiply(exchangeRate);
+            }
+        }
+
+        // ✅ Ensure rounding AFTER conversion
+        withdrawalAmount = withdrawalAmount.setScale(2, RoundingMode.HALF_UP);
+
+        // ✅ Debugging Logs to Check Values
+        System.out.println("🚀 DEBUG: Withdrawal Transaction");
+        System.out.println("Original Withdrawal Amount: " + withdrawal.getWithdrawalAmount() + " " + withdrawal.getCurrencyCode());
+        System.out.println("Converted Withdrawal Amount: " + withdrawalAmount + " " + account.getCurrencyCode());
+
+        if (withdrawalAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("❌ Error: Withdrawal amount must be greater than zero after conversion.");
+        }
+
+        // ✅ Store the correct exchange rate in the transaction
+        withdrawal.setExchangeRate(exchangeRate);
+        withdrawal.setWithdrawalAmount(withdrawalAmount);
+
+        // ✅ Fixed: Properly negate the amount and round before updating balance
+        boolean success = bankAccountService.updateBalance(account.getId(), withdrawalAmount.negate().setScale(2, RoundingMode.HALF_UP), false, true);
         if (!success) {
-            System.err.println("❌ Withdrawal failed for account ID: " + accountId);
+            System.err.println("❌ Withdrawal failed for account ID: " + account.getId());
             return null; // Do not save the transaction if balance update failed
         }
 
-
-        // Save and return the transaction
         return withdrawalRepoistory.save(withdrawal);
     }
+
+
+
+//    @Transactional
+//    public WithdrawalTransaction connectTransactionToBank(WithdrawalTransaction withdrawal, int bankAccountId) {
+//        // Connect the transfer to the bank account
+//        transactionService.connectTransactionToBankAccount(withdrawal, bankAccountId);
+//
+//        // Ensure transaction is linked to a valid bank account
+//        if (withdrawal.getBankAccount() == null) {
+//            throw new IllegalArgumentException("Withdrawal transaction must be linked to a bank account.");
+//        }
+//
+//        int accountId = withdrawal.getBankAccount().getId();
+//
+//        // Update bank account balance
+//        boolean success = bankAccountService.updateBalance(accountId, withdrawal.getWithdrawalAmount(), false, false);
+//        if (!success) {
+//            System.err.println("❌ Withdrawal failed for account ID: " + accountId);
+//            return null; // Do not save the transaction if balance update failed
+//        }
+//
+//
+//        // Save and return the transaction
+//        return withdrawalRepoistory.save(withdrawal);
+//    }
 
 
     public List<WithdrawalTransaction> getWithdrawalsByAccountId(int accountId) {

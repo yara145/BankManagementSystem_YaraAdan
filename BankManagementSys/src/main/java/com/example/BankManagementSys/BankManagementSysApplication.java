@@ -47,6 +47,11 @@ public class BankManagementSysApplication implements CommandLineRunner {
 	@Autowired
 	private  TransferTransactionService transferService;
 
+	// ✅ Injects CurrencyExchangeService to use currency conversion methods
+	@Autowired
+	private CurrencyExchangeService currencyExchangeService;
+
+
 	@Override
 	public void run(String... args) throws Exception {
 
@@ -114,7 +119,7 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		System.out.println("*******bank account 1 *****\n");
 		BankAccount bankAccount = new BankAccount();
 		bankAccount.setType("personal");
-		bankAccount.setBalance(BigDecimal.valueOf(2000));
+		bankAccount.setBalance(BigDecimal.valueOf(0));
 		bankAccountService.createNewBankAccount(bankAccount);
 
 		customerService.addBankAccountToCustomer(customer.getIdCode(), bankAccount);
@@ -183,15 +188,17 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		}
 
 		//System.out.println("*********** deposits **********");
-/*
+
 // ✅ Deposit 1
 		DepositTransaction deposit = new DepositTransaction();
-		deposit.setDespositAmount(BigDecimal.valueOf(10000));
+		deposit.setDespositAmount(BigDecimal.valueOf(20000));
 		//deposit.setBankAccount(existingBankAccount); // 🔥 Link to bank account
+		deposit.setCurrencyCode("EUR");
+		deposit.setDescription(deposit.getDespositAmount().toString()+" "+deposit.getCurrencyCode());
 		System.out.println(depositService.addNewDepositTransaction(deposit));
 		System.out.println("Connect deposit to the bank account");
 		System.out.println(depositService.connectTransactionToBank(deposit, existingBankAccount.getId()));
-
+/*
 // ✅ Deposit 2
 		DepositTransaction deposit2 = new DepositTransaction();
 		deposit2.setDespositAmount(BigDecimal.valueOf(15000));
@@ -202,54 +209,58 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		System.out.println(depositService.connectTransactionToBank(deposit2, existingBankAccount.getId()));
 
 		System.out.println("*********** withdrawal **********");
-
+*/
 // ✅ Withdrawal
 		WithdrawalTransaction withdrawal = new WithdrawalTransaction();
-		withdrawal.setWithdrawalAmount(BigDecimal.valueOf(4000));
+		withdrawal.setCurrencyCode("EUR");
+		withdrawal.setWithdrawalAmount(BigDecimal.valueOf(10000));
+		withdrawal.setDescription(withdrawal.getWithdrawalAmount().toString()+" "+withdrawal.getCurrencyCode());
 		//withdrawal.setBankAccount(existingBankAccount); // 🔥 Link to bank account
 
 		System.out.println(withdrawalService.addNewWithdrawalTransaction(withdrawal));
 		System.out.println(withdrawalService.connectTransactionToBank(withdrawal, existingBankAccount.getId()));
 
-*/
 
 
-
-
-		System.out.println("***********Transfer **********\n");
-		TransferTransaction transfer = new TransferTransaction();
-		transfer.setReceiverBankCode(1);
-		transfer.setTransferBranchCode(1);
-		transfer.setReceiverAccountNum(2);
-		transfer.setBankAccount(existingBankAccount);  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
-		transfer.setAmount(BigDecimal.valueOf(500));
-		transferService.addNewTransferTransaction(transfer);
-		transferService.connectTransactionToBank(transfer,1);
-		System.out.println("*********** Loan **********\n");
+//
+//		System.out.println("***********Transfer **********\n");
+//		TransferTransaction transfer = new TransferTransaction();
+//		transfer.setReceiverBankCode(1);
+//		transfer.setTransferBranchCode(1);
+//		transfer.setReceiverAccountNum(2);
+//		transfer.setBankAccount(existingBankAccount);  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+//		transfer.setAmount(BigDecimal.valueOf(500));
+//		transferService.addNewTransferTransaction(transfer);
+//		transferService.connectTransactionToBank(transfer,1);
+//		System.out.println("*********** Loan **********\n");
 // ✅ Loan
-		Loan loan = new Loan();
-
-// Set start date to tomorrow
-		Date startPaymentDate = new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24)); // Tomorrow
-		loan.setStartPaymentDate(startPaymentDate);
+//		Loan loan = new Loan();
+//
+//// Set start date to tomorrow
+//		Date startPaymentDate = new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24)); // Tomorrow
+//		loan.setStartPaymentDate(startPaymentDate);
 
 // Set end date to 30 days after the start date
-		Date endPaymentDate = new Date(startPaymentDate.getTime() + (1000L * 60 * 60 * 24 * 30)); // 30 days after tomorrow
-		loan.setEndPaymentDate(endPaymentDate);
+//		Date endPaymentDate = new Date(startPaymentDate.getTime() + (1000L * 60 * 60 * 24 * 30)); // 30 days after tomorrow
+//		loan.setEndPaymentDate(endPaymentDate);
+//
+//		loan.setLoanName("Personal Loan for Yara");
+//		loan.setInterestRate(0.3);
+//		loan.setNumberOfPayments(5);
+//		loan.setLoanAmount(BigDecimal.valueOf(50000));
+//		loan.setRemainingBalance(loan.getLoanAmount().doubleValue()); // ✅ Set correct balance
+//		//loan.setBankAccount(existingBankAccount); // 🔥 Link to bank account
+//
+//		System.out.println(loanService.addNewLoan(loan));
+//
+//		System.out.println("*********** Print the Loan **********\n" + loan.getTransactionId());
+//		System.out.println(loanService.connectLoanToBank(loan, existingBankAccount.getId()));
+//
+//		System.out.println("*********** Loan Payments are scheduled  **********\n");
 
-		loan.setLoanName("Personal Loan for Yara");
-		loan.setInterestRate(0.3);
-		loan.setNumberOfPayments(5);
-		loan.setLoanAmount(BigDecimal.valueOf(50000));
-		loan.setRemainingBalance(loan.getLoanAmount().doubleValue()); // ✅ Set correct balance
-		//loan.setBankAccount(existingBankAccount); // 🔥 Link to bank account
-
-		System.out.println(loanService.addNewLoan(loan));
-
-		System.out.println("*********** Print the Loan **********\n" + loan.getTransactionId());
-		System.out.println(loanService.connectLoanToBank(loan, existingBankAccount.getId()));
-
-		System.out.println("*********** Loan Payments are scheduled  **********");
+		System.out.println("✅ Testing API Connection...\n");
+		BigDecimal usdRate = currencyExchangeService.getExchangeRateForCurrency("USD");
+		System.out.println("Exchange Rate for USD: " + usdRate);
 
 
 
