@@ -198,24 +198,8 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		System.out.println("Connect deposit to the bank account");
 		System.out.println(depositService.connectTransactionToBank(deposit, existingBankAccount.getId()));
 
-// ✅ Deposit 2
-		DepositTransaction deposit2 = new DepositTransaction();
-		deposit2.setDespositAmount(BigDecimal.valueOf(40000));
-		System.out.println(depositService.addNewDepositTransaction(deposit2));
-		System.out.println(depositService.getDepoistById(deposit2.getTransactionId())); // 🔥 Use actual ID
-		deposit2.setDescription(deposit2.getDespositAmount().toString()+" "+deposit2.getCurrencyCode());
-		System.out.println("Connect deposit to the bank account");
-		System.out.println(depositService.connectTransactionToBank(deposit2, existingBankAccount.getId()));
 
 		System.out.println("*********** withdrawal **********");
-// ✅ Deposit 3
-		DepositTransaction deposit3 = new DepositTransaction();
-		deposit3.setDespositAmount(BigDecimal.valueOf(3000));
-		deposit3.setDescription(deposit3.getDespositAmount().toString()+" "+deposit3.getCurrencyCode());
-		System.out.println(depositService.addNewDepositTransaction(deposit3));
-		System.out.println(depositService.getDepoistById(deposit3.getTransactionId())); // 🔥 Use actual ID
-		System.out.println("Connect deposit to the bank account");
-		System.out.println(depositService.connectTransactionToBank(deposit3, existingBankAccount.getId()));
 
 // ✅ Withdrawal 1
 		WithdrawalTransaction withdrawal = new WithdrawalTransaction();
@@ -225,12 +209,33 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		System.out.println(withdrawalService.addNewWithdrawalTransaction(withdrawal));
 		System.out.println(withdrawalService.connectTransactionToBank(withdrawal, existingBankAccount.getId()));
 
+
+
+// ✅ Deposit 2
+		DepositTransaction deposit2 = new DepositTransaction();
+		deposit2.setDespositAmount(BigDecimal.valueOf(40000));
+		System.out.println(depositService.addNewDepositTransaction(deposit2));
+		System.out.println(depositService.getDepoistById(deposit2.getTransactionId())); // 🔥 Use actual ID
+		deposit2.setDescription(deposit2.getDespositAmount().toString()+" "+deposit2.getCurrencyCode());
+		System.out.println("Connect deposit to the bank account");
+		System.out.println(depositService.connectTransactionToBank(deposit2, existingBankAccount.getId()));
+
 // ✅ Withdrawal 2
 		WithdrawalTransaction withdrawal2 = new WithdrawalTransaction();
 		withdrawal2.setWithdrawalAmount(BigDecimal.valueOf(1000));
 		withdrawal2.setDescription(withdrawal2.getWithdrawalAmount().toString()+" "+withdrawal2.getCurrencyCode());
 		System.out.println(withdrawalService.addNewWithdrawalTransaction(withdrawal2));
 		System.out.println(withdrawalService.connectTransactionToBank(withdrawal2, existingBankAccount.getId()));
+
+		// ✅ Deposit 3
+		DepositTransaction deposit3 = new DepositTransaction();
+		deposit3.setDespositAmount(BigDecimal.valueOf(3000));
+		deposit3.setDescription(deposit3.getDespositAmount().toString()+" "+deposit3.getCurrencyCode());
+		System.out.println(depositService.addNewDepositTransaction(deposit3));
+		System.out.println(depositService.getDepoistById(deposit3.getTransactionId())); // 🔥 Use actual ID
+		System.out.println("Connect deposit to the bank account");
+		System.out.println(depositService.connectTransactionToBank(deposit3, existingBankAccount.getId()));
+
 
 // ✅ Withdrawal 3
 		WithdrawalTransaction withdrawal3 = new WithdrawalTransaction();
