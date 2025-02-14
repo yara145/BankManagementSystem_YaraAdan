@@ -90,7 +90,7 @@ public class TransferTransactionService {
 //        }
 
         // Set transfer status
-        transfer.setTransferStatus(TransferStatus.COMPLETED);
+        transfer.setTransferStatus(TransferStatus.PENDING);
         transfer.setTransactionDateTime(LocalDateTime.now());
 
         return transferTransactionRepoistory.save(transfer);
@@ -142,7 +142,7 @@ public class TransferTransactionService {
         transactionService.connectTransactionToBankAccount(transfer, bankAccountId);
 
         // Add transfer-specific logic (e.g., default status)
-        transfer.setTransferStatus(TransferStatus.PENDING);
+        transfer.setTransferStatus(TransferStatus.COMPLETED);
 
         // Save and return the transaction
         return transferTransactionRepoistory.save(transfer);
