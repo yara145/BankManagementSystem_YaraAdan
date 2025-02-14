@@ -62,4 +62,13 @@ public class TransferController {
         transferService.connectTransactionToBank(transfer, bankAccountId);
         return ResponseEntity.ok("Transfer transaction successfully linked to bank account ID " + bankAccountId);
     }
+
+    @GetMapping("account/{accountId}")
+    public ResponseEntity<List<TransferTransaction>> getTransfersByAccountId(@PathVariable int accountId) {
+        List<TransferTransaction> transfers = transferService.getTransfersByAccountId(accountId);
+        return transfers.isEmpty()
+                ? ResponseEntity.noContent().build() // 204 No Content if empty
+                : ResponseEntity.ok(transfers);      // 200 OK if found
+    }
+
 }
