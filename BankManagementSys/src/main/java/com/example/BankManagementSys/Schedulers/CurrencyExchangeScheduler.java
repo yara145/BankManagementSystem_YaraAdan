@@ -22,6 +22,7 @@ public class CurrencyExchangeScheduler {
 
     @Scheduled(cron = "0 0 2 * * *") // Runs daily at 2 AM
     public void updateExchangeRates() {
+
         Map<String, BigDecimal> rates = currencyExchangeService.getExchangeRates();
         rates.forEach((currencyCode, rate) -> {
             // Save or update the rate in the database
@@ -32,6 +33,8 @@ public class CurrencyExchangeScheduler {
             currencyRate.setLastUpdated(LocalDateTime.now());
             currencyRateRepository.save(currencyRate);
         });
-        System.out.println("✅ Exchange rates updated in the database!");
+        System.out.println("\uD83D\uDCB2 Exchange rates updated in the database!");
+
+
     }
 }

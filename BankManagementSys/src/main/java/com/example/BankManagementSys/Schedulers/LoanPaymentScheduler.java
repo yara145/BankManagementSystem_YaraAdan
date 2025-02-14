@@ -13,11 +13,12 @@ public class LoanPaymentScheduler {
 
     // ✅ Runs on the 1st day of every month at midnight
     //@Scheduled(cron = "0 0 0 1 * ?")
-    @Scheduled(cron = "0 * * * * ?") // Runs every minute (FOR TESTING ONLY)
+    //@Scheduled(cron = "0 * * * * ?") // Runs every minute (FOR TESTING ONLY)
+    @Scheduled(cron = "*/1 * * * * ?") // Runs every second
+
     public void scheduleLoanPayments() {
         System.out.println("🔄 Processing monthly loan payments...");
         loanPaymentService.processMonthlyLoanPayments(); // Calls the service method
         System.out.println("✅ Monthly loan payments processed!");
     }
 }
-// @Scheduled(cron = "0 * * * * ?") // Runs every minute (FOR TESTING ONLY)

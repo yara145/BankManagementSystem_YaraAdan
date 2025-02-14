@@ -150,13 +150,11 @@ public class DepositTransactionService {
 //    }
 
 
-
-
     @Transactional
     public DepositTransaction connectTransactionToBank(DepositTransaction deposit, int bankAccountId) {
         transactionService.connectTransactionToBankAccount(deposit, bankAccountId);
 
-        BankAccount account = deposit.getBankAccount();
+        BankAccount account = bankAccountService.getBankAccountById(bankAccountId);
         if (account == null) {
             throw new IllegalArgumentException("Deposit transaction must be linked to a valid bank account.");
         }
@@ -170,23 +168,23 @@ public class DepositTransactionService {
 
         // ✅ Correct Conversion Logic
         if (!account.getCurrencyCode().equalsIgnoreCase(deposit.getCurrencyCode())) {
-            if (account.getCurrencyCode().equalsIgnoreCase("ILS")) {
-                // ✅ Convert from EUR → ILS (Divide)
-                depositAmount = depositAmount.divide(exchangeRate, 6, RoundingMode.HALF_UP);
+            if (deposit.getCurrencyCode().equalsIgnoreCase("ILS")) {
+                // Convert ILS → EUR (Divide by 3.7037)
+                depositAmount = depositAmount.divide(BigDecimal.valueOf(3.7037), 6, RoundingMode.HALF_UP);
             } else {
-                // ✅ Convert from ILS → Other Currency (Multiply)
-                depositAmount = depositAmount.multiply(exchangeRate);
+                // Convert EUR → ILS (Multiply by 3.7037)
+                depositAmount = depositAmount.multiply(BigDecimal.valueOf(3.7037));
             }
         }
 
-        // ✅ Ensure correct rounding AFTER conversion
+        // ✅ Ensure rounding AFTER conversion
         depositAmount = depositAmount.setScale(2, RoundingMode.HALF_UP);
 
-        // 🟢 Store the correct exchange rate in the transaction
+        // ✅ Store exchange rate and converted deposit amount
         deposit.setExchangeRate(exchangeRate);
         deposit.setDespositAmount(depositAmount);
 
-        // ✅ Update the account balance with the correct converted amount
+        // ✅ Update balance correctly
         boolean success = bankAccountService.updateBalance(account.getId(), depositAmount, true, false);
         if (!success) {
             System.err.println("❌ Deposit failed for account ID: " + account.getId());
@@ -195,6 +193,54 @@ public class DepositTransactionService {
 
         return depositRepoistory.save(deposit);
     }
+
+
+
+//
+//    @Transactional
+//    public DepositTransaction connectTransactionToBank(DepositTransaction deposit, int bankAccountId) {
+//        transactionService.connectTransactionToBankAccount(deposit, bankAccountId);
+//
+//        BankAccount account = deposit.getBankAccount();
+//        if (account == null) {
+//            throw new IllegalArgumentException("Deposit transaction must be linked to a valid bank account.");
+//        }
+//
+//        BigDecimal depositAmount = deposit.getDespositAmount();
+//        BigDecimal exchangeRate = currencyExchangeService.getExchangeRateForCurrency(deposit.getCurrencyCode());
+//
+//        if (exchangeRate == null || exchangeRate.compareTo(BigDecimal.ZERO) == 0) {
+//            throw new IllegalArgumentException("Invalid exchange rate received for currency: " + deposit.getCurrencyCode());
+//        }
+//
+//        // ✅ Correct Conversion Logic
+//        if (!account.getCurrencyCode().equalsIgnoreCase(deposit.getCurrencyCode())) {
+//            if (deposit.getCurrencyCode().equalsIgnoreCase("ILS")) {
+//                // ✅ Convert from ILS → Foreign Currency (Divide)
+//                depositAmount = depositAmount.divide(exchangeRate, 6, RoundingMode.HALF_UP);
+//            } else {
+//                // ✅ Convert from Foreign Currency → ILS (Multiply)
+//                depositAmount = depositAmount.multiply(exchangeRate);
+//            }
+//        }
+//
+//
+//        // ✅ Ensure correct rounding AFTER conversion
+//        depositAmount = depositAmount.setScale(2, RoundingMode.HALF_UP);
+//
+//        // 🟢 Store the correct exchange rate in the transaction
+//        deposit.setExchangeRate(exchangeRate);
+//        deposit.setDespositAmount(depositAmount);
+//
+//        // ✅ Update the account balance with the correct converted amount
+//        boolean success = bankAccountService.updateBalance(account.getId(), depositAmount, true, false);
+//        if (!success) {
+//            System.err.println("❌ Deposit failed for account ID: " + account.getId());
+//            return null;
+//        }
+//
+//        return depositRepoistory.save(deposit);
+//    }
 
 
 

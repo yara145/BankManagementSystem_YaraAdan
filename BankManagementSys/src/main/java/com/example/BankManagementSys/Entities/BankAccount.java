@@ -34,7 +34,8 @@ public class BankAccount implements Serializable {
     private String type;
 
     @Column(name = "balance")
-    private BigDecimal balance;
+    private BigDecimal balance = BigDecimal.ZERO;
+
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")

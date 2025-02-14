@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-
+import com.example.BankManagementSys.Enums.LoanType;
 @Service
 @EnableScheduling // Enables scheduled tasks
 public class LoanPaymentService {
@@ -38,10 +38,20 @@ public class LoanPaymentService {
 
     private void makeLoanPayment(Loan loan) {
         double monthlyInterestRate = loan.getInterestRate() / 100 / 12;
-        double interestAmount = loan.getRemainingBalance() * monthlyInterestRate;
-        double principalPayment = (loan.getLoanAmount().doubleValue() / loan.getNumberOfPayments());
-        double totalPayment = interestAmount + principalPayment;
+        double totalPayment;
 
+        if (loan.getLoanType() == LoanType.SHPITZER) {
+            // Shpitzer formula: Fixed Monthly Payment
+            totalPayment = (loan.getLoanAmount().doubleValue() * monthlyInterestRate) /
+                    (1 - Math.pow(1 + monthlyInterestRate, -loan.getNumberOfPayments()));
+        } else {
+            // Equal Principal: Fixed Principal, Decreasing Interest
+            double principalPayment = loan.getLoanAmount().doubleValue() / loan.getNumberOfPayments();
+            double interestAmount = loan.getRemainingBalance() * monthlyInterestRate;
+            totalPayment = principalPayment + interestAmount;
+        }
+
+        // Ensure last payment does not overpay
         if (loan.getRemainingBalance() < totalPayment) {
             totalPayment = loan.getRemainingBalance();
         }
@@ -52,8 +62,12 @@ public class LoanPaymentService {
         if (!success) return;
 
         // Update loan balance
-        loan.setRemainingBalance(loan.getRemainingBalance() - principalPayment);
-        loan.setNumberOfPayments(Math.max(0, loan.getNumberOfPayments() - 1));
+        loan.setRemainingBalance(loan.getRemainingBalance() - totalPayment);
+
+        // Decrease remaining payments, but never below zero
+        if (loan.getNumberOfPayments() > 0) {
+            loan.setNumberOfPayments(loan.getNumberOfPayments() - 1);
+        }
 
         // Save payment
         LoanPayment loanPayment = new LoanPayment();
@@ -64,6 +78,56 @@ public class LoanPaymentService {
         loanPaymentRepository.save(loanPayment);
         loanRepository.save(loan);
     }
+
+
+
+
+
+
+
+
+
+
+/*
+    private void makeLoanPayment(Loan loan) {
+        double monthlyInterestRate = loan.getInterestRate() / 100 / 12;
+
+        // ✅ Ensure equal payments by using remaining payments
+        double principalPayment = loan.getRemainingBalance() / loan.getNumberOfPayments();
+        double interestAmount = loan.getRemainingBalance() * monthlyInterestRate;
+        double totalPayment = principalPayment + interestAmount;
+
+        // ✅ Ensure last payment does not overpay
+        if (loan.getRemainingBalance() < totalPayment) {
+            totalPayment = loan.getRemainingBalance();
+            principalPayment = loan.getRemainingBalance();
+        }
+
+        // ✅ Deduct from bank account only if balance allows
+        boolean success = bankAccountService.updateBalance(
+                loan.getBankAccount().getId(), BigDecimal.valueOf(totalPayment), false, true
+        );
+        if (!success) return;
+
+        // ✅ Update loan balance
+        loan.setRemainingBalance(loan.getRemainingBalance() - principalPayment);
+
+        // ✅ Decrease remaining payments, but never below zero
+        if (loan.getNumberOfPayments() > 0) {
+            loan.setNumberOfPayments(loan.getNumberOfPayments() - 1);
+        }
+
+        // ✅ Save payment
+        LoanPayment loanPayment = new LoanPayment();
+        loanPayment.setLoan(loan);
+        loanPayment.setPaymentAmount(totalPayment);
+        loanPayment.setPaymentDateTime(LocalDateTime.now());
+
+        loanPaymentRepository.save(loanPayment);
+        loanRepository.save(loan);
+    }
+
+*/
 
 
     // ** Get Payments by Loan ID **
@@ -83,6 +147,35 @@ public class LoanPaymentService {
     public List<LoanPayment> getAllPayments() {
         return loanPaymentRepository.findAll();
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

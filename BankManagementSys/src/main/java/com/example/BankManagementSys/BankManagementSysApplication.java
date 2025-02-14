@@ -7,7 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
-
+import com.example.BankManagementSys.Enums.LoanType;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -72,15 +72,11 @@ public class BankManagementSysApplication implements CommandLineRunner {
 			System.err.println("Invalid birthdate format: " + e.getMessage());
 		}
 
-
 		customer.setFirstName("Adan");
-
-
 		// Add customer using the service
 		customerService.addNewCustomer(customer);
 
 		System.out.println("*******create customer 2 *****\n");
-
 		Customer customer2 = new Customer();
 		customer2.setUserName("Anne2001");
 		customer2.setPassword("2001");
@@ -97,17 +93,18 @@ public class BankManagementSysApplication implements CommandLineRunner {
 			System.err.println("Invalid birthdate format: " + e.getMessage());
 		}
 
-
 		customer2.setFirstName("Anne");
-
 
 		// Add customer using the service
 		customerService.addNewCustomer(customer2);
 
+
+		System.out.println("*******create bank *****\n");
 		Bank bank = new Bank();
 		bank.setName("MyBank");
 		bankService.addBank(bank);
 
+		System.out.println("*******create branch *****\n");
 		Branch branch = new Branch();
 		branch.setName("first branch");
 		branch.setLocation("haifa");
@@ -119,26 +116,30 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		System.out.println("*******bank account 1 *****\n");
 		BankAccount bankAccount = new BankAccount();
 		bankAccount.setType("personal");
-		bankAccount.setBalance(BigDecimal.valueOf(0));
 		bankAccountService.createNewBankAccount(bankAccount);
 
 		customerService.addBankAccountToCustomer(customer.getIdCode(), bankAccount);
 
+		System.out.println("*******bank account 2 *****\n");
+		BankAccount bankAccount3 = new BankAccount();
+		bankAccount3.setType("personal");
+		bankAccountService.createNewBankAccount(bankAccount3);
+
+		customerService.addBankAccountToCustomer(customer.getIdCode(), bankAccount3);
 
 
 
-
-		System.out.println("*******bank account 2*****\n");
+		System.out.println("*******bank account 3*****\n");
 		BankAccount bankAccount2 = new BankAccount();
 		bankAccount2.setType("personal");
-		bankAccount2.setBalance(BigDecimal.valueOf(1000));
 		bankAccountService.createNewBankAccount(bankAccount2);
 		customerService.addBankAccountToCustomer(customer2.getIdCode(), bankAccount2);
 
-
+		System.out.println("******* Adding Bank Account to Branch *****\n");
 		branchService.addBankAccountToBranch(branch.getId(), bankAccount);
 		branchService.addBankAccountToBranch(branch.getId(), bankAccount2);
-
+		branchService.addBankAccountToBranch(branch.getId(), bankAccount3);
+		System.out.println("******* Create Employee 1 *****\n");
 		Employee employee = new Employee();
 		employee.setUserName("yara123");
 		employee.setPassword("1234");
@@ -154,7 +155,6 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		} catch (ParseException e) {
 			System.err.println("Invalid birthdate format: " + e.getMessage());
 		}
-
 
 		employee.setFirstName("yara");
 
@@ -192,75 +192,103 @@ public class BankManagementSysApplication implements CommandLineRunner {
 // ✅ Deposit 1
 		DepositTransaction deposit = new DepositTransaction();
 		deposit.setDespositAmount(BigDecimal.valueOf(20000));
-		//deposit.setBankAccount(existingBankAccount); // 🔥 Link to bank account
 		deposit.setCurrencyCode("EUR");
 		deposit.setDescription(deposit.getDespositAmount().toString()+" "+deposit.getCurrencyCode());
 		System.out.println(depositService.addNewDepositTransaction(deposit));
 		System.out.println("Connect deposit to the bank account");
 		System.out.println(depositService.connectTransactionToBank(deposit, existingBankAccount.getId()));
-/*
+
 // ✅ Deposit 2
 		DepositTransaction deposit2 = new DepositTransaction();
-		deposit2.setDespositAmount(BigDecimal.valueOf(15000));
-		//deposit2.setBankAccount(existingBankAccount); // 🔥 Link to bank account
+		deposit2.setDespositAmount(BigDecimal.valueOf(40000));
 		System.out.println(depositService.addNewDepositTransaction(deposit2));
 		System.out.println(depositService.getDepoistById(deposit2.getTransactionId())); // 🔥 Use actual ID
+		deposit2.setDescription(deposit2.getDespositAmount().toString()+" "+deposit2.getCurrencyCode());
 		System.out.println("Connect deposit to the bank account");
 		System.out.println(depositService.connectTransactionToBank(deposit2, existingBankAccount.getId()));
 
 		System.out.println("*********** withdrawal **********");
-*/
-// ✅ Withdrawal
+// ✅ Deposit 3
+		DepositTransaction deposit3 = new DepositTransaction();
+		deposit3.setDespositAmount(BigDecimal.valueOf(3000));
+		deposit3.setDescription(deposit3.getDespositAmount().toString()+" "+deposit3.getCurrencyCode());
+		System.out.println(depositService.addNewDepositTransaction(deposit3));
+		System.out.println(depositService.getDepoistById(deposit3.getTransactionId())); // 🔥 Use actual ID
+		System.out.println("Connect deposit to the bank account");
+		System.out.println(depositService.connectTransactionToBank(deposit3, existingBankAccount.getId()));
+
+// ✅ Withdrawal 1
 		WithdrawalTransaction withdrawal = new WithdrawalTransaction();
 		withdrawal.setCurrencyCode("EUR");
 		withdrawal.setWithdrawalAmount(BigDecimal.valueOf(10000));
 		withdrawal.setDescription(withdrawal.getWithdrawalAmount().toString()+" "+withdrawal.getCurrencyCode());
-		//withdrawal.setBankAccount(existingBankAccount); // 🔥 Link to bank account
-
 		System.out.println(withdrawalService.addNewWithdrawalTransaction(withdrawal));
 		System.out.println(withdrawalService.connectTransactionToBank(withdrawal, existingBankAccount.getId()));
 
+// ✅ Withdrawal 2
+		WithdrawalTransaction withdrawal2 = new WithdrawalTransaction();
+		withdrawal2.setWithdrawalAmount(BigDecimal.valueOf(1000));
+		withdrawal2.setDescription(withdrawal2.getWithdrawalAmount().toString()+" "+withdrawal2.getCurrencyCode());
+		System.out.println(withdrawalService.addNewWithdrawalTransaction(withdrawal2));
+		System.out.println(withdrawalService.connectTransactionToBank(withdrawal2, existingBankAccount.getId()));
+
+// ✅ Withdrawal 3
+		WithdrawalTransaction withdrawal3 = new WithdrawalTransaction();
+		withdrawal3.setWithdrawalAmount(BigDecimal.valueOf(900));
+		withdrawal3.setDescription(withdrawal3.getWithdrawalAmount().toString()+" "+withdrawal3.getCurrencyCode());
+		System.out.println(withdrawalService.addNewWithdrawalTransaction(withdrawal3));
+		System.out.println(withdrawalService.connectTransactionToBank(withdrawal3, existingBankAccount.getId()));
 
 
-//
-//		System.out.println("***********Transfer **********\n");
-//		TransferTransaction transfer = new TransferTransaction();
-//		transfer.setReceiverBankCode(1);
-//		transfer.setTransferBranchCode(1);
-//		transfer.setReceiverAccountNum(2);
-//		transfer.setBankAccount(existingBankAccount);  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
-//		transfer.setAmount(BigDecimal.valueOf(500));
-//		transferService.addNewTransferTransaction(transfer);
-//		transferService.connectTransactionToBank(transfer,1);
-//		System.out.println("*********** Loan **********\n");
-// ✅ Loan
-//		Loan loan = new Loan();
-//
-//// Set start date to tomorrow
-//		Date startPaymentDate = new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24)); // Tomorrow
-//		loan.setStartPaymentDate(startPaymentDate);
+// Transfer 1
 
-// Set end date to 30 days after the start date
-//		Date endPaymentDate = new Date(startPaymentDate.getTime() + (1000L * 60 * 60 * 24 * 30)); // 30 days after tomorrow
-//		loan.setEndPaymentDate(endPaymentDate);
-//
-//		loan.setLoanName("Personal Loan for Yara");
-//		loan.setInterestRate(0.3);
-//		loan.setNumberOfPayments(5);
-//		loan.setLoanAmount(BigDecimal.valueOf(50000));
-//		loan.setRemainingBalance(loan.getLoanAmount().doubleValue()); // ✅ Set correct balance
-//		//loan.setBankAccount(existingBankAccount); // 🔥 Link to bank account
-//
-//		System.out.println(loanService.addNewLoan(loan));
-//
-//		System.out.println("*********** Print the Loan **********\n" + loan.getTransactionId());
-//		System.out.println(loanService.connectLoanToBank(loan, existingBankAccount.getId()));
-//
-//		System.out.println("*********** Loan Payments are scheduled  **********\n");
+		System.out.println("***********Transfer **********\n");
+		TransferTransaction transfer = new TransferTransaction();
+		transfer.setReceiverBankCode(1);
+		transfer.setTransferBranchCode(1);
+		transfer.setReceiverAccountNum(2);
+		transfer.setBankAccount(existingBankAccount);
+		transfer.setAmount(BigDecimal.valueOf(500));
+		transferService.addNewTransferTransaction(transfer);
+		transferService.connectTransactionToBank(transfer,1);
+		System.out.println("*********** Loan **********\n");
+ //✅ Loan
+		Loan loan = new Loan();
 
-		System.out.println("✅ Testing API Connection...\n");
-		BigDecimal usdRate = currencyExchangeService.getExchangeRateForCurrency("USD");
-		System.out.println("Exchange Rate for USD: " + usdRate);
+
+// Set start date to tomorrow
+		Date startPaymentDate = new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24)); // Tomorrow
+		loan.setStartPaymentDate(startPaymentDate);
+
+
+ //Set end date to 30 days after the start date
+		Date endPaymentDate = new Date(startPaymentDate.getTime() + (1000L * 60 * 60 * 24 * 30)); // 30 days after tomorrow
+		loan.setEndPaymentDate(endPaymentDate);
+		loan.setLoanName("Personal Loan for Yara");
+		loan.setInterestRate(0.3);
+		loan.setNumberOfPayments(5);
+		loan.setLoanAmount(BigDecimal.valueOf(10000));
+		loan.setRemainingBalance(loan.getLoanAmount().doubleValue()); // ✅ Set correct balance
+
+		// ✅ Setting Loan Type
+		loan.setLoanType(LoanType.EQUAL_PRINCIPAL);
+
+		System.out.println(loanService.addNewLoan(loan));
+
+		System.out.println("*********** Print the Loan **********\n" + loan.getTransactionId());
+		System.out.println(loanService.connectLoanToBank(loan, existingBankAccount.getId()));
+
+		System.out.println("*********** Loan Payments are scheduled  **********\n");
+
+
+
+
+
+
+
+//		System.out.println("✅ Testing API Connection...\n");
+//		BigDecimal usdRate = currencyExchangeService.getExchangeRateForCurrency("USD");
+//		System.out.println("Exchange Rate for USD: " + usdRate);
 
 
 
