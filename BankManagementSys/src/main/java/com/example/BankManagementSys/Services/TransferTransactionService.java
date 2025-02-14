@@ -92,6 +92,7 @@ public class TransferTransactionService {
         // Set transfer status
         transfer.setTransferStatus(TransferStatus.PENDING);
         transfer.setTransactionDateTime(LocalDateTime.now());
+        transfer.setDescription("Transfer To account number " + receiverAccount.getId() );
 
         return transferTransactionRepoistory.save(transfer);
     }
