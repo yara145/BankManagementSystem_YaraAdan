@@ -65,8 +65,8 @@ public class LoanPaymentService {
         loan.setRemainingBalance(loan.getRemainingBalance() - totalPayment);
 
         // Decrease remaining payments, but never below zero
-        if (loan.getNumberOfPayments() > 0) {
-            loan.setNumberOfPayments(loan.getNumberOfPayments() - 1);
+        if (loan.getRemainingPaymentsNum() > 0) {
+            loan.setRemainingPaymentsNum(loan.getRemainingPaymentsNum() - 1);
         }
 
         // Save payment

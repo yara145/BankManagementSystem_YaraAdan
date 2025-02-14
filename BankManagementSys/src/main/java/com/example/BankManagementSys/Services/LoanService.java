@@ -94,7 +94,7 @@ public class LoanService {
 
         // Save loan to the repository
         loan.setTransactionDateTime(LocalDateTime.now());
-
+        loan.setRemainingPaymentsNum(loan.getNumberOfPayments());
         return this.loanRepoistory.save(loan);
     }
 

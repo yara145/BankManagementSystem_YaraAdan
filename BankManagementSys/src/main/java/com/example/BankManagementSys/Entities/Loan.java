@@ -25,6 +25,9 @@ public class Loan extends Transaction  {
     @Column(name = "number_of_payments", nullable = false)
     private int numberOfPayments = 0;
 
+    @Column(name = "remaining_payments_num", nullable = false)
+    private int remainingPaymentsNum = 0;
+
     @Column(name = "end_payment_date")
     private Date endPaymentDate;
 
