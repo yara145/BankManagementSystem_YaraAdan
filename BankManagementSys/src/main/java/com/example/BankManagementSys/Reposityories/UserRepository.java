@@ -15,6 +15,8 @@ public interface UserRepository extends JpaRepository<User,Long> {
     Optional<User> findUsersByEmailEquals(String email);
     User findByUserName(String userName);
     // Find users by username pattern
+    Optional<User> findUserByUserNameEquals(String userName);
+
     @Query(value = "SELECT * FROM users WHERE user_name LIKE %:provider%", nativeQuery = true)
     List<User> getUsersWithSpecificProvider(@Param("provider") String provider);
 

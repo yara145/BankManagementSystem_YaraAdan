@@ -9,53 +9,43 @@ public class OTPStorage {
     private final Map<String, String> otpStore = new ConcurrentHashMap<>();
     private final Map<String, Long> otpExpiry = new ConcurrentHashMap<>();
 
+    private String normalizeEmail(String email) {
+        if (email == null) return null;
+        return email.trim()
+                .toLowerCase()
+                .replaceAll("[\\p{C}\\p{Z}]", ""); // Removes control characters & zero-width spaces
+    }
+
     public void storeOTP(String email, String otp, long validityInMillis) {
-        String normalizedEmail = email.trim().toLowerCase();
+        String normalizedEmail = normalizeEmail(email);
         otpStore.put(normalizedEmail, otp);
         otpExpiry.put(normalizedEmail, System.currentTimeMillis() + validityInMillis);
 
-        System.out.println("OTP stored successfully for: " + normalizedEmail);
-        System.out.println("Stored OTP: " + otp);
-        System.out.println("Updated OTP Storage: " + otpStore);
+        System.out.println("✅ Stored OTP for: " + normalizedEmail);
+        System.out.println("Updated OTP Store: " + otpStore);
     }
 
     public boolean validateOTP(String email, String otp) {
-        String normalizedEmail = email.trim().toLowerCase();
-        System.out.println("Validating OTP for: " + normalizedEmail);
-        System.out.println("Provided OTP: " + otp);
-        System.out.println("Current OTP Storage: " + otpStore);
+        String normalizedEmail = normalizeEmail(email);
 
         if (!otpStore.containsKey(normalizedEmail)) {
-            System.out.println("OTP not found in store for: " + normalizedEmail);
             return false;
         }
 
         long expiryTime = otpExpiry.get(normalizedEmail);
         if (System.currentTimeMillis() > expiryTime) {
-            System.out.println("OTP expired for: " + normalizedEmail);
             removeOTP(normalizedEmail);
             return false;
         }
 
-        String storedOTP = otpStore.get(normalizedEmail);
-        System.out.println("Stored OTP: " + storedOTP);
-
-        boolean isMatch = storedOTP.equals(otp);
-        System.out.println("OTP Match Status: " + isMatch);
-
-        if (!isMatch) {
-            System.out.println("OTP mismatch! Provided: [" + otp + "] Expected: [" + storedOTP + "]");
-            return false;
-        }
-
-        removeOTP(normalizedEmail);
-        return true;
+        return otpStore.get(normalizedEmail).equals(otp);
     }
 
     public void removeOTP(String email) {
-        otpStore.remove(email);
-        otpExpiry.remove(email);
-        System.out.println("OTP removed for: " + email);
+        String normalizedEmail = normalizeEmail(email);
+        otpStore.remove(normalizedEmail);
+        otpExpiry.remove(normalizedEmail);
+        System.out.println("✅ OTP removed for: " + normalizedEmail);
     }
 
     public Map<String, String> getOtpStore() {
@@ -64,9 +54,5 @@ public class OTPStorage {
 
     public Map<String, Long> getOtpExpiry() {
         return otpExpiry;
-    }
-
-    public void printAllOTPs() {
-        System.out.println("Current OTP Storage: " + otpStore);
     }
 }

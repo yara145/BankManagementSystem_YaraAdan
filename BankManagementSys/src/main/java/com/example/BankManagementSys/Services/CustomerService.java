@@ -36,38 +36,20 @@ public class CustomerService extends UserService {
 
     public Customer addNewCustomer(Customer customer) throws IllegalArgumentException {
         try {
-            // Validate shared attributes using UserService
-            validateUser(customer);
-
-            // Check if the age is legal
-            int age = customerRepository.calculateAge(customer.getBirthdate());
-            if (age < minCustomerAge) {
-                throw new IllegalArgumentException("Customer's age is below the minimum required: " + minCustomerAge);
-            }
-
-            // Set the join date to today
+            validateCustomerDetails(customer);
+            // ✅ Set the join date to today
             customer.setJoinDate(new Date());
-            System.out.println("******************Customer created successfully************");
+            System.out.println("✅ Customer created successfully.");
 
-            // Save the new customer
-            return this.customerRepository.save(customer);
+            return customerRepository.save(customer);
 
-        } catch (DataIntegrityViolationException e) {
-            Throwable rootCause = e.getRootCause();
-            String errorMessage = "A record with the provided unique value already exists.";
-
-            if (rootCause instanceof ConstraintViolationException) {
-                if (rootCause.getMessage().contains("email")) {
-                    errorMessage = "A user with this email already exists.";
-                } else if (rootCause.getMessage().contains("userName")) {
-                    errorMessage = "A user with this username already exists.";
-                }
-            }
-
-            System.out.println("DataIntegrityViolationException fired: " + errorMessage);
-            throw new DataIntegrityViolationException(errorMessage);
+        } catch (IllegalArgumentException e) {
+            System.err.println("❌ Validation failed: " + e.getMessage());
+            throw e;
         }
     }
+
+
 
     public void updateCustomer(Customer customer) {
         try {
@@ -159,7 +141,7 @@ public class CustomerService extends UserService {
 
         return customer.getBankAccounts();
     }
-    // ✅ Delete customer by username
+    //  Delete customer by username
     public void deleteCustomerByUsername(String username) {
         Customer customer = customerRepository.findByUserName(username)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer with username '" + username + "' not found."));
@@ -170,7 +152,7 @@ public class CustomerService extends UserService {
 
         customerRepository.delete(customer);
     }
-    // ✅ Disconnect Bank Account from Customer
+    //  Disconnect Bank Account from Customer
     @Transactional
     public void removeBankAccountFromCustomer(Long customerId, int bankAccountId) {
         BankAccount bankAccount = bankAccountService.getBankAccountById(bankAccountId);
@@ -185,10 +167,31 @@ public class CustomerService extends UserService {
 
         System.out.println("Bank Account " + bankAccountId + " unlinked from Customer " + customerId);
     }
-    // ✅ Get Customer ID by Username
+    //  Get Customer ID by Username
     public Long getCustomerIdByUsername(String username) {
         Customer customer = customerRepository.findByUserName(username)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found with username: " + username));
         return customer.getIdCode();
     }
+    public void validateCustomerDetails(Customer customer) {
+        //  Check if email is already registered
+        if (customerRepository.findByEmail(customer.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("A user with this email already exists.");
+        }
+
+        //  Check if username is already taken
+        if (customerRepository.findByUserName(customer.getUserName()).isPresent()) {
+            throw new IllegalArgumentException("A user with this username already exists.");
+        }
+
+        //  Validate user attributes (from UserService)
+        validateUser(customer); // This already checks name format, password, etc.
+
+        //  Check age requirement
+        int age = customerRepository.calculateAge(customer.getBirthdate());
+        if (age < minCustomerAge) {
+            throw new IllegalArgumentException("Customer's age is below the required minimum: " + minCustomerAge);
+        }
+    }
+
 }

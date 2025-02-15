@@ -40,28 +40,36 @@ public class DepositController {
     }
 
 
-    // ✅ Adds a new deposit transaction.
     @PostMapping("add")
-    public ResponseEntity<String> addDeposit(@RequestBody DepositTransaction deposit) {
+    public ResponseEntity<?> addDeposit(@RequestBody DepositTransaction deposit) {
         try {
-            depositService.addNewDepositTransaction(deposit);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Deposit transaction added successfully.");
+            // ✅ Save the deposit and get the created deposit object
+            DepositTransaction savedDeposit = depositService.addNewDepositTransaction(deposit);
+
+            // ✅ Ensure we return the ID in the response
+            System.out.println("✅ Deposit Created with ID: " + savedDeposit.getTransactionId()); // Debugging
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedDeposit); // Return full deposit object
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error adding deposit transaction: " + e.getMessage());
+                    .body("❌ Error adding deposit transaction: " + e.getMessage());
         }
     }
+
 
 
     // ✅ Links a deposit transaction to a bank account.
     @PutMapping("connect/{depositId}/{bankAccountId}")
     public ResponseEntity<String> connectDepositToBank(@PathVariable int depositId, @PathVariable int bankAccountId) {
+        System.out.println("🔍 Connecting Deposit ID: " + depositId + " to Bank Account ID: " + bankAccountId);
+
         DepositTransaction deposit = depositService.getDepoistById(depositId);
         if (deposit == null) {
             throw new DepositTransactionNotFoundException("Deposit transaction with ID " + depositId + " not found.");
         }
+
         depositService.connectTransactionToBank(deposit, bankAccountId);
-        return ResponseEntity.ok("Deposit transaction successfully linked to bank account ID " + bankAccountId);
+        return ResponseEntity.ok("✅ Deposit transaction successfully linked to bank account ID " + bankAccountId);
     }
 
 

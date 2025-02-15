@@ -12,12 +12,18 @@ public class OTPValidationController {
     @Autowired
     private OTPStorage otpStorage;
 
+    private String normalizeEmail(String email) {
+        if (email == null) return null;
+        return email.trim()
+                .toLowerCase()
+                .replaceAll("[\\p{C}\\p{Z}]", ""); // Removes control characters & zero-width spaces
+    }
     @GetMapping("/validate")
     public ResponseEntity<String> validateOTP(@RequestParam String email, @RequestParam String otp) {
-        String normalizedEmail = email.trim().toLowerCase();
+        String normalizedEmail = normalizeEmail(email);
         String trimmedOTP = otp.trim();
 
-        System.out.println("Validating OTP for: " + normalizedEmail);
+        System.out.println("🔍 Validating OTP for: " + normalizedEmail);
         System.out.println("Provided OTP: " + trimmedOTP);
 
         if (!otpStorage.getOtpStore().containsKey(normalizedEmail)) {
@@ -25,24 +31,18 @@ public class OTPValidationController {
         }
 
         long expiryTime = otpStorage.getOtpExpiry().get(normalizedEmail);
-        long remainingTime = (expiryTime - System.currentTimeMillis()) / 1000;
-
-        if (expiryTime < System.currentTimeMillis()) {
+        if (System.currentTimeMillis() > expiryTime) {
             otpStorage.removeOTP(normalizedEmail);
             return ResponseEntity.badRequest().body("OTP expired. Please request a new one.");
         }
 
         String storedOTP = otpStorage.getOtpStore().get(normalizedEmail);
-        boolean isValid = storedOTP.equals(trimmedOTP);
-
-        System.out.println("Stored OTP: " + storedOTP);
-        System.out.println("OTP Match Status: " + isValid);
-
-        if (!isValid) {
-            return ResponseEntity.badRequest().body("Wrong OTP. Please try again.");
+        if (!storedOTP.equals(trimmedOTP)) {
+            return ResponseEntity.badRequest().body("Incorrect OTP. Try again.");
         }
 
         otpStorage.removeOTP(normalizedEmail);
-        return ResponseEntity.ok("OTP is valid! You have successfully verified your email. Remaining time: " + remainingTime + " seconds.");
+        return ResponseEntity.ok("OTP validated successfully.");
     }
+
 }
