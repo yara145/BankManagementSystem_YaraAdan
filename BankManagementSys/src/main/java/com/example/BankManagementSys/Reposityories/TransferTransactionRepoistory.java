@@ -14,4 +14,8 @@ public interface TransferTransactionRepoistory extends JpaRepository<TransferTra
 //    List<TransferTransaction> findByBankAccountId(@Param("bankAccountId") int bankAccountId);
 
     TransferTransaction findByTransactionId(int transactionId);
+
+    @Query("SELECT t FROM TransferTransaction t WHERE t.bankAccount.id = :bankAccountId")
+    List<TransferTransaction> findByBankAccountId(@Param("bankAccountId") int bankAccountId);
+
 }

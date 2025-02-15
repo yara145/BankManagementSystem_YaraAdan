@@ -149,4 +149,9 @@ public class TransferTransactionService {
         return transferTransactionRepoistory.save(transfer);
     }
 
+    // ✅ Retrieves all transfers linked to a specific bank account.
+    public List<TransferTransaction> getTransfersByAccountId(int accountId) {
+        return transferTransactionRepoistory.findByBankAccountId(accountId);
+    }
+
 }
