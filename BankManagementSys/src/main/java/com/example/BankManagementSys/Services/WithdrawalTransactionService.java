@@ -36,16 +36,20 @@ public class WithdrawalTransactionService {
     // ** Add **
     public WithdrawalTransaction addNewWithdrawalTransaction(WithdrawalTransaction withdrawal) {
         if (withdrawal == null) {
-            throw new IllegalArgumentException("Withdrawal Transaction cannot be null.");
+            throw new IllegalArgumentException("❌ Error: Withdrawal transaction cannot be null.");
         }
-        if (withdrawal.getWithdrawalAmount().compareTo(BigDecimal.ONE) < 0) {
-            throw new TransactionAmountInvalidException("Withdrawal amount must be greater than zero.");
+        if (withdrawal.getWithdrawalAmount() == null || withdrawal.getWithdrawalAmount().compareTo(BigDecimal.ONE) < 0) {
+            throw new TransactionAmountInvalidException("❌ Withdrawal amount must be greater than zero.");
         }
-        if (withdrawal.getWithdrawalAmount().compareTo(maxAmount) > 0) {
-            throw new TransactionAmountInvalidException("Withdrawal amount exceeds the allowed maximum.");
+        if (maxAmount == null || withdrawal.getWithdrawalAmount().compareTo(maxAmount) > 0) {
+            throw new TransactionAmountInvalidException("❌ Withdrawal amount exceeds the allowed maximum.");
         }
 
+        // ✅ Ensure transaction date is set
         withdrawal.setTransactionDateTime(LocalDateTime.now());
+
+        // ✅ Log for debugging
+        System.out.println("📌 Saving Withdrawal: " + withdrawal);
 
         return withdrawalRepoistory.save(withdrawal);
     }

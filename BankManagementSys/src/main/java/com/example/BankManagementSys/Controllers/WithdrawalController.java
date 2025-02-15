@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -36,15 +38,29 @@ public class WithdrawalController {
         return ResponseEntity.ok(withdrawal);
     }
 
-    // ✅ Adds a new withdrawal transaction.
     @PostMapping("add")
-    public ResponseEntity<String> addWithdrawal(@RequestBody WithdrawalTransaction withdrawal) {
+    public ResponseEntity<?> addWithdrawal(@RequestBody WithdrawalTransaction withdrawal) {
+        System.out.println("📌 Debugging Withdrawal: " + withdrawal); // Debugging
+
         try {
-            withdrawalService.addNewWithdrawalTransaction(withdrawal);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Withdrawal transaction added successfully.");
+            // ✅ Validate withdrawal amount
+            if (withdrawal.getWithdrawalAmount() == null || withdrawal.getWithdrawalAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("❌ Error: Withdrawal amount must be greater than zero.");
+            }
+
+            // ✅ Ensure transaction date is set
+            withdrawal.setTransactionDateTime(LocalDateTime.now());
+
+            // ✅ Save withdrawal transaction
+            WithdrawalTransaction savedWithdrawal = withdrawalService.addNewWithdrawalTransaction(withdrawal);
+
+            System.out.println("✅ Withdrawal Created with ID: " + savedWithdrawal.getTransactionId()); // Debugging
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedWithdrawal);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error adding withdrawal transaction: " + e.getMessage());
+                    .body("❌ Error adding withdrawal transaction: " + e.getMessage());
         }
     }
 
