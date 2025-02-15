@@ -16,8 +16,8 @@ public class LoanPaymentScheduler {
     //@Scheduled(cron = "*/1 * * * * ?") // Runs every second
     @Scheduled(cron = "0 * * * * ?") // Runs every minute (FOR TESTING ONLY)
     public void scheduleLoanPayments() {
-        System.out.println("🔄 Processing monthly loan payments...");
+        //System.out.println("🔄 Processing monthly loan payments...");
         loanPaymentService.processMonthlyLoanPayments(); // Calls the service method
-        System.out.println("✅ Monthly loan payments processed!");
+       // System.out.println("✅ Monthly loan payments processed!");
     }
 }
