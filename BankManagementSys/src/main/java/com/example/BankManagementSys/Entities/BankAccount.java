@@ -44,13 +44,13 @@ public class BankAccount implements Serializable {
     @JoinColumn(name = "branch_id")
     @ToString.Exclude   // exclude branch from bank account
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonBackReference
+    @JsonBackReference(value = "bankAccount-branch") // ✅ Unique name added
     private Branch branch;
 
     @JoinColumn(name = "customer_id")
     @ManyToOne(fetch = FetchType.LAZY)
     @ToString.Exclude
-    @JsonBackReference
+    @JsonBackReference(value = "bankAccount-customer") // ✅ Unique name added
     private Customer customer;
 
     @ManyToMany(mappedBy = "bankAccounts")

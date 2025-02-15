@@ -1,6 +1,7 @@
 package com.example.BankManagementSys.Services;
 
 import com.example.BankManagementSys.Entities.*;
+import com.example.BankManagementSys.Enums.BankAccountStatus;
 import com.example.BankManagementSys.Enums.TransferStatus;
 import com.example.BankManagementSys.Exceptions.TransactionAmountInvalidException;
 import com.example.BankManagementSys.Exceptions.TransactionAmountInvalidException;
@@ -139,6 +140,18 @@ public class TransferTransactionService {
 
     @Transactional
     public TransferTransaction connectTransactionToBank(TransferTransaction transfer, int bankAccountId) {
+
+
+        BankAccount account = bankAccountService.getBankAccountById(bankAccountId);
+        if (account == null) {
+            throw new IllegalArgumentException("Transfer must be linked to a valid bank account.");
+        }
+
+        // ✅ Ensure the bank account is ACTIVE
+        if (account.getStatus() != BankAccountStatus.ACTIVE) {
+            throw new IllegalStateException("❌ Transfer failed: Bank account ID " + bankAccountId + " is" + account.getStatus() + ".");
+        }
+
         // Connect the transfer to the bank account
         transactionService.connectTransactionToBankAccount(transfer, bankAccountId);
 

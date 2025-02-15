@@ -1,6 +1,7 @@
 package com.example.BankManagementSys.Services;
 
 import com.example.BankManagementSys.Entities.*;
+import com.example.BankManagementSys.Enums.BankAccountStatus;
 import com.example.BankManagementSys.Enums.TransferStatus;
 
 import com.example.BankManagementSys.Exceptions.TransactionAmountInvalidException;
@@ -73,12 +74,19 @@ public class WithdrawalTransactionService {
 
     @Transactional
     public WithdrawalTransaction connectTransactionToBank(WithdrawalTransaction withdrawal, int bankAccountId) {
-        transactionService.connectTransactionToBankAccount(withdrawal, bankAccountId);
-
         BankAccount account = bankAccountService.getBankAccountById(bankAccountId);
+        // ✅ Ensure the bank account is ACTIVE
+        if (account.getStatus() != BankAccountStatus.ACTIVE) {
+            throw new IllegalStateException("❌ Withdrawal failed: Bank account ID " + bankAccountId + " is " + account.getStatus() + ".");
+        }
+
         if (account == null) {
             throw new IllegalArgumentException("Withdrawal transaction must be linked to a valid bank account.");
         }
+
+        transactionService.connectTransactionToBankAccount(withdrawal, bankAccountId);
+
+
 
         BigDecimal withdrawalAmount = withdrawal.getWithdrawalAmount();
         BigDecimal exchangeRate = currencyExchangeService.getExchangeRateForCurrency(withdrawal.getCurrencyCode());
@@ -122,6 +130,41 @@ public class WithdrawalTransactionService {
 
         return withdrawalRepoistory.save(withdrawal);
     }
+
+
+
+    public List<WithdrawalTransaction> getWithdrawalsByAccountId(int accountId) {
+        return withdrawalRepoistory.findByBankAccountId(accountId);
+    }
+}
+
+
+
+
+//    @Transactional
+//    public WithdrawalTransaction connectTransactionToBank(WithdrawalTransaction withdrawal, int bankAccountId) {
+//        // Connect the transfer to the bank account
+//        transactionService.connectTransactionToBankAccount(withdrawal, bankAccountId);
+//
+//        // Ensure transaction is linked to a valid bank account
+//        if (withdrawal.getBankAccount() == null) {
+//            throw new IllegalArgumentException("Withdrawal transaction must be linked to a bank account.");
+//        }
+//
+//        int accountId = withdrawal.getBankAccount().getId();
+//
+//        // Update bank account balance
+//        boolean success = bankAccountService.updateBalance(accountId, withdrawal.getWithdrawalAmount(), false, false);
+//        if (!success) {
+//            System.err.println("❌ Withdrawal failed for account ID: " + accountId);
+//            return null; // Do not save the transaction if balance update failed
+//        }
+//
+//
+//        // Save and return the transaction
+//        return withdrawalRepoistory.save(withdrawal);
+//    }
+
 
 
 
@@ -181,41 +224,3 @@ public class WithdrawalTransactionService {
 //
 //        return withdrawalRepoistory.save(withdrawal);
 //    }
-
-
-    public List<WithdrawalTransaction> getWithdrawalsByAccountId(int accountId) {
-        return withdrawalRepoistory.findByBankAccountId(accountId);
-    }
-}
-
-
-
-
-
-
-
-//    @Transactional
-//    public WithdrawalTransaction connectTransactionToBank(WithdrawalTransaction withdrawal, int bankAccountId) {
-//        // Connect the transfer to the bank account
-//        transactionService.connectTransactionToBankAccount(withdrawal, bankAccountId);
-//
-//        // Ensure transaction is linked to a valid bank account
-//        if (withdrawal.getBankAccount() == null) {
-//            throw new IllegalArgumentException("Withdrawal transaction must be linked to a bank account.");
-//        }
-//
-//        int accountId = withdrawal.getBankAccount().getId();
-//
-//        // Update bank account balance
-//        boolean success = bankAccountService.updateBalance(accountId, withdrawal.getWithdrawalAmount(), false, false);
-//        if (!success) {
-//            System.err.println("❌ Withdrawal failed for account ID: " + accountId);
-//            return null; // Do not save the transaction if balance update failed
-//        }
-//
-//
-//        // Save and return the transaction
-//        return withdrawalRepoistory.save(withdrawal);
-//    }
-
-

@@ -1,7 +1,9 @@
 package com.example.BankManagementSys.Services;
 
+import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Loan;
 import com.example.BankManagementSys.Entities.LoanPayment;
+import com.example.BankManagementSys.Enums.BankAccountStatus;
 import com.example.BankManagementSys.Reposityories.LoanPaymentRepository;
 import com.example.BankManagementSys.Reposityories.LoanRepository;
 import jakarta.transaction.Transactional;
@@ -37,6 +39,14 @@ public class LoanPaymentService {
     }
 
     private void makeLoanPayment(Loan loan) {
+
+        BankAccount account = loan.getBankAccount();
+
+        // ✅ Ensure the bank account is ACTIVE
+        if (account.getStatus() != BankAccountStatus.ACTIVE) {
+            throw new IllegalStateException("❌ Loan Payment failed: Bank account ID " + account.getId() + " is" + account.getStatus() + ".");
+        }
+
         double monthlyInterestRate = loan.getInterestRate() / 100 / 12;
         double totalPayment;
 
@@ -78,6 +88,37 @@ public class LoanPaymentService {
         loanPaymentRepository.save(loanPayment);
         loanRepository.save(loan);
     }
+
+
+    // ** Get Payments by Loan ID **
+    public List<LoanPayment> getPaymentsByLoanId(int loanId) {
+        Loan loan = loanRepository.findById(loanId).orElseThrow(() ->
+                new IllegalArgumentException("Loan with ID " + loanId + " does not exist."));
+        return loan.getPayments();
+    }
+
+    // ** Get a Specific Payment by ID **
+    public LoanPayment getPaymentById(int paymentId) {
+        return loanPaymentRepository.findById(paymentId).orElseThrow(() ->
+                new IllegalArgumentException("Payment with ID " + paymentId + " does not exist."));
+    }
+
+    // ** Get All Payments **
+    public List<LoanPayment> getAllPayments() {
+        return loanPaymentRepository.findAll();
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -128,44 +169,6 @@ public class LoanPaymentService {
     }
 
 */
-
-
-    // ** Get Payments by Loan ID **
-    public List<LoanPayment> getPaymentsByLoanId(int loanId) {
-        Loan loan = loanRepository.findById(loanId).orElseThrow(() ->
-                new IllegalArgumentException("Loan with ID " + loanId + " does not exist."));
-        return loan.getPayments();
-    }
-
-    // ** Get a Specific Payment by ID **
-    public LoanPayment getPaymentById(int paymentId) {
-        return loanPaymentRepository.findById(paymentId).orElseThrow(() ->
-                new IllegalArgumentException("Payment with ID " + paymentId + " does not exist."));
-    }
-
-    // ** Get All Payments **
-    public List<LoanPayment> getAllPayments() {
-        return loanPaymentRepository.findAll();
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

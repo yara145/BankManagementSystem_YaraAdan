@@ -1,6 +1,7 @@
 package com.example.BankManagementSys.Entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
@@ -17,6 +18,8 @@ public class Customer extends User {
 
     @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @ToString.Exclude
-    @JsonIgnore // ✅ Prevents bank accounts from appearing in customer responses
+    @JsonManagedReference(value = "bankAccount-customer") // ✅ Required to match BankAccount
     private List<BankAccount> bankAccounts;
+
+
 }

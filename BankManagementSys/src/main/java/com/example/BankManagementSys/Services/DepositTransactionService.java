@@ -1,6 +1,7 @@
 package com.example.BankManagementSys.Services;
 
 import com.example.BankManagementSys.Entities.*;
+import com.example.BankManagementSys.Enums.BankAccountStatus;
 import com.example.BankManagementSys.Enums.TransferStatus;
 
 import com.example.BankManagementSys.Exceptions.TransactionAmountInvalidException;
@@ -48,15 +49,15 @@ public class DepositTransactionService {
 
 
         deposit.setTransactionDateTime(LocalDateTime.now());
-        deposit.setDescription("Deposit of " + deposit.getDespositAmount()+deposit.getCurrencyCode());
-        return  depositRepoistory.save(deposit);
+        deposit.setDescription("Deposit of " + deposit.getDespositAmount() + deposit.getCurrencyCode());
+        return depositRepoistory.save(deposit);
     }
 
 
     //** Update **
-    public DepositTransaction updateDepositTransaction(DepositTransaction deposit)  {
+    public DepositTransaction updateDepositTransaction(DepositTransaction deposit) {
 
-        if (deposit == null ) {
+        if (deposit == null) {
             throw new IllegalArgumentException("Deposit cannot be null.");
         }
         if (!depositRepoistory.existsById(deposit.getTransactionId())) {
@@ -70,7 +71,7 @@ public class DepositTransactionService {
     public void deleteDepositTransaction(int depositId) {
 
         // Find the transaction
-     DepositTransaction deposit = depositRepoistory.findByTransactionId(depositId)
+        DepositTransaction deposit = depositRepoistory.findByTransactionId(depositId)
                 .orElseThrow(() -> new IllegalArgumentException("Withdrawal with ID " + depositId + " does not exist."));
 
         // Perform the delete operation
@@ -84,7 +85,7 @@ public class DepositTransactionService {
     public DepositTransaction getDepoistById(int depositId) {
 
         return depositRepoistory.findById(depositId)
-                .orElseThrow(() -> new IllegalArgumentException("Deposit with ID " +depositId + " does not exist."));
+                .orElseThrow(() -> new IllegalArgumentException("Deposit with ID " + depositId + " does not exist."));
 
     }
 
@@ -100,57 +101,6 @@ public class DepositTransactionService {
         return depositRepoistory.findByBankAccountId(accountId);
     }
 
-//    @Transactional
-//    public DepositTransaction connectTransactionToBank(DepositTransaction deposit, int bankAccountId) {
-//        // Connect the transfer to the bank account
-//        transactionService.connectTransactionToBankAccount(deposit, bankAccountId);
-//
-//        // Ensure transaction is linked to a valid bank account
-//        if (deposit.getBankAccount() == null) {
-//            throw new IllegalArgumentException("Deposit transaction must be linked to a bank account.");
-//        }
-//
-//        int accountId = deposit.getBankAccount().getId();
-//
-//        // Update bank account balance
-//        boolean success = bankAccountService.updateBalance(accountId, deposit.getDespositAmount(), true, false);
-//        if (!success) {
-//            System.err.println("❌ Deposit failed for account ID: " + accountId);
-//            return null; // Do not save the transaction if balance update failed
-//        }
-//        // Save and return the transaction
-//        return depositRepoistory.save(deposit);
-//    }
-
-//    @Transactional
-//    public DepositTransaction connectTransactionToBank(DepositTransaction deposit, int bankAccountId) {
-//        transactionService.connectTransactionToBankAccount(deposit, bankAccountId);
-//
-//        BankAccount account = deposit.getBankAccount();
-//        if (account == null) {
-//            throw new IllegalArgumentException("Deposit transaction must be linked to a valid bank account.");
-//        }
-//
-//        BigDecimal depositAmount = deposit.getDespositAmount();
-//
-//        // 🟢 Convert if account currency != transaction currency
-//        if (!account.getCurrencyCode().equalsIgnoreCase(deposit.getCurrencyCode())) {
-//            BigDecimal exchangeRate = currencyExchangeService.getExchangeRateForCurrency(account.getCurrencyCode());
-//            depositAmount = depositAmount.multiply(exchangeRate);
-//            deposit.setExchangeRate(exchangeRate); // Store exchange rate
-//        }
-//
-//        // ✅ Update account balance in the correct currency
-//        boolean success = bankAccountService.updateBalance(account.getId(), depositAmount, true, false);
-//        if (!success) {
-//            System.err.println("❌ Deposit failed for account ID: " + account.getId());
-//            return null;
-//        }
-//
-//        return depositRepoistory.save(deposit);
-//    }
-
-
     @Transactional
     public DepositTransaction connectTransactionToBank(DepositTransaction deposit, int bankAccountId) {
         transactionService.connectTransactionToBankAccount(deposit, bankAccountId);
@@ -160,40 +110,54 @@ public class DepositTransactionService {
             throw new IllegalArgumentException("Deposit transaction must be linked to a valid bank account.");
         }
 
-        BigDecimal depositAmount = deposit.getDespositAmount();
-        BigDecimal exchangeRate = currencyExchangeService.getExchangeRateForCurrency(deposit.getCurrencyCode());
-
-        if (exchangeRate == null || exchangeRate.compareTo(BigDecimal.ZERO) == 0) {
-            throw new IllegalArgumentException("Invalid exchange rate received for currency: " + deposit.getCurrencyCode());
+        // ✅ Ensure the bank account is either ACTIVE or RESTRICTED
+        if (account.getStatus() != BankAccountStatus.ACTIVE && account.getStatus() != BankAccountStatus.RESTRICTED) {
+            throw new IllegalStateException("❌ Deposit failed: Bank account ID " + bankAccountId + " is " + account.getStatus() + ".");
         }
 
-        // ✅ Correct Conversion Logic
-        if (!account.getCurrencyCode().equalsIgnoreCase(deposit.getCurrencyCode())) {
-            if (deposit.getCurrencyCode().equalsIgnoreCase("ILS")) {
-                // Convert ILS → EUR (Divide by 3.7037)
-                depositAmount = depositAmount.divide(BigDecimal.valueOf(3.7037), 6, RoundingMode.HALF_UP);
-            } else {
-                // Convert EUR → ILS (Multiply by 3.7037)
-                depositAmount = depositAmount.multiply(BigDecimal.valueOf(3.7037));
+            BigDecimal depositAmount = deposit.getDespositAmount();
+            BigDecimal exchangeRate = currencyExchangeService.getExchangeRateForCurrency(deposit.getCurrencyCode());
+
+            if (exchangeRate == null || exchangeRate.compareTo(BigDecimal.ZERO) == 0) {
+                throw new IllegalArgumentException("Invalid exchange rate received for currency: " + deposit.getCurrencyCode());
             }
+
+            // ✅ Correct Conversion Logic
+            if (!account.getCurrencyCode().equalsIgnoreCase(deposit.getCurrencyCode())) {
+                if (deposit.getCurrencyCode().equalsIgnoreCase("ILS")) {
+                    // Convert ILS → EUR (Divide by 3.7037)
+                    depositAmount = depositAmount.divide(BigDecimal.valueOf(3.7037), 6, RoundingMode.HALF_UP);
+                } else {
+                    // Convert EUR → ILS (Multiply by 3.7037)
+                    depositAmount = depositAmount.multiply(BigDecimal.valueOf(3.7037));
+                }
+            }
+
+            // ✅ Ensure rounding AFTER conversion
+            depositAmount = depositAmount.setScale(2, RoundingMode.HALF_UP);
+
+            // ✅ Store exchange rate and converted deposit amount
+            deposit.setExchangeRate(exchangeRate);
+            deposit.setDespositAmount(depositAmount);
+
+            // ✅ Update balance correctly
+            boolean success = bankAccountService.updateBalance(account.getId(), depositAmount, true, false);
+            if (!success) {
+                System.err.println("❌ Deposit failed for account ID: " + account.getId());
+                return null;
+            }
+
+            return depositRepoistory.save(deposit);
+
         }
 
-        // ✅ Ensure rounding AFTER conversion
-        depositAmount = depositAmount.setScale(2, RoundingMode.HALF_UP);
+}
 
-        // ✅ Store exchange rate and converted deposit amount
-        deposit.setExchangeRate(exchangeRate);
-        deposit.setDespositAmount(depositAmount);
 
-        // ✅ Update balance correctly
-        boolean success = bankAccountService.updateBalance(account.getId(), depositAmount, true, false);
-        if (!success) {
-            System.err.println("❌ Deposit failed for account ID: " + account.getId());
-            return null;
-        }
 
-        return depositRepoistory.save(deposit);
-    }
+
+
+
 
 
 
@@ -249,4 +213,56 @@ public class DepositTransactionService {
 
 
 
-}
+
+
+
+
+//    @Transactional
+//    public DepositTransaction connectTransactionToBank(DepositTransaction deposit, int bankAccountId) {
+//        // Connect the transfer to the bank account
+//        transactionService.connectTransactionToBankAccount(deposit, bankAccountId);
+//
+//        // Ensure transaction is linked to a valid bank account
+//        if (deposit.getBankAccount() == null) {
+//            throw new IllegalArgumentException("Deposit transaction must be linked to a bank account.");
+//        }
+//
+//        int accountId = deposit.getBankAccount().getId();
+//
+//        // Update bank account balance
+//        boolean success = bankAccountService.updateBalance(accountId, deposit.getDespositAmount(), true, false);
+//        if (!success) {
+//            System.err.println("❌ Deposit failed for account ID: " + accountId);
+//            return null; // Do not save the transaction if balance update failed
+//        }
+//        // Save and return the transaction
+//        return depositRepoistory.save(deposit);
+//    }
+
+//    @Transactional
+//    public DepositTransaction connectTransactionToBank(DepositTransaction deposit, int bankAccountId) {
+//        transactionService.connectTransactionToBankAccount(deposit, bankAccountId);
+//
+//        BankAccount account = deposit.getBankAccount();
+//        if (account == null) {
+//            throw new IllegalArgumentException("Deposit transaction must be linked to a valid bank account.");
+//        }
+//
+//        BigDecimal depositAmount = deposit.getDespositAmount();
+//
+//        // 🟢 Convert if account currency != transaction currency
+//        if (!account.getCurrencyCode().equalsIgnoreCase(deposit.getCurrencyCode())) {
+//            BigDecimal exchangeRate = currencyExchangeService.getExchangeRateForCurrency(account.getCurrencyCode());
+//            depositAmount = depositAmount.multiply(exchangeRate);
+//            deposit.setExchangeRate(exchangeRate); // Store exchange rate
+//        }
+//
+//        // ✅ Update account balance in the correct currency
+//        boolean success = bankAccountService.updateBalance(account.getId(), depositAmount, true, false);
+//        if (!success) {
+//            System.err.println("❌ Deposit failed for account ID: " + account.getId());
+//            return null;
+//        }
+//
+//        return depositRepoistory.save(deposit);
+//    }

@@ -3,9 +3,9 @@ package com.example.BankManagementSys.Controllers;
 import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Branch;
 import com.example.BankManagementSys.Entities.Employee;
+import com.example.BankManagementSys.Exceptions.BankAccountNotFoundException;
 import com.example.BankManagementSys.Exceptions.EmployeeNotFoundException;
-import com.example.BankManagementSys.Services.EmployeeService;
-import com.example.BankManagementSys.Services.ManyToManyRelationService;
+import com.example.BankManagementSys.Services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +21,13 @@ public class EmployeeController {
     private EmployeeService employeeService;
     @Autowired
     private ManyToManyRelationService manyToManyRelationService;
+    @Autowired
+    private CustomerService customerService;
+    @Autowired
+    private BankAccountService bankAccountService;
+    @Autowired
+    private BranchService branchService;
+
     // ✅ Links an employee to a bank account.
     @PutMapping("connect/{employeeId}/bankAccount/{bankAccountId}")
     public ResponseEntity<String> connectEmployeeToBankAccount(
@@ -170,4 +177,102 @@ public class EmployeeController {
         employeeService.removeBranchFromEmployee(id, branch);
         return ResponseEntity.ok("Employee removed from branch successfully.");
     }
+
+
+    // function that enable the employee to create bank account for a customer
+    @PostMapping("createBankAccount/{employeeId}/customer/{customerId}/branch/{branchId}")
+    public ResponseEntity<String> createBankAccountForCustomer(
+            @PathVariable Long employeeId,
+            @PathVariable Long customerId,
+            @PathVariable int branchId,
+            @RequestBody BankAccount bankAccount) {
+        try {
+            // Validate employee existence
+            Employee employee = employeeService.getEmployeeById(employeeId);
+
+            // Ensure employee is linked to a branch that has the customer
+            boolean isAuthorized = employee.getBranches().stream()
+                    .anyMatch(branch -> branch.getBankAccounts().stream()
+                            .anyMatch(acc -> acc.getCustomer().getIdCode().equals(customerId)));
+
+            if (!isAuthorized) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Employee does not have permission to create a bank account for this customer.");
+            }
+
+            // Assign the bank account to the customer
+            customerService.addBankAccountToCustomer(customerId, bankAccount);
+            branchService.addBankAccountToBranch(branchId, bankAccount);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Bank account successfully created for customer ID " + customerId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    // function that enable the employee to suspend a specific bank account
+    @PutMapping("suspendBankAccount/{employeeId}/{bankAccountId}")
+    public ResponseEntity<String> suspendBankAccount(
+            @PathVariable Long employeeId,
+            @PathVariable int bankAccountId) {
+        try {
+            // Validate employee existence
+            Employee employee = employeeService.getEmployeeById(employeeId);
+
+            // Get bank account details
+            BankAccount bankAccount = bankAccountService.getBankAccountById(bankAccountId);
+
+            // Ensure employee is assigned to the branch of the bank account
+            boolean isAuthorized = employee.getBranches().contains(bankAccount.getBranch());
+
+            if (!isAuthorized) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Employee does not have permission to suspend this bank account.");
+            }
+
+            // Use existing method to suspend the account
+            bankAccountService.suspendBankAccount(employeeId, bankAccountId);
+
+            return ResponseEntity.ok("Bank account ID " + bankAccountId + " has been suspended.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    // ✅ Function to restrict a specific bank account (by an authorized employee)
+    @PutMapping("restrictBankAccount/{employeeId}/{bankAccountId}")
+    public ResponseEntity<String> restrictBankAccount(
+            @PathVariable Long employeeId,
+            @PathVariable int bankAccountId) {
+        try {
+            // Validate employee existence
+            Employee employee = employeeService.getEmployeeById(employeeId);
+
+            // Get bank account details
+            BankAccount bankAccount = bankAccountService.getBankAccountById(bankAccountId);
+
+            // Ensure employee is assigned to the branch of the bank account
+            boolean isAuthorized = employee.getBranches().contains(bankAccount.getBranch());
+
+            if (!isAuthorized) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Employee does not have permission to restrict this bank account.");
+            }
+
+            // Use existing method to restrict the account
+            bankAccountService.restrictBankAccount(employeeId, bankAccountId);
+
+            return ResponseEntity.ok("Bank account ID " + bankAccountId + " has been restricted.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+
+
+
+
+
+
 }

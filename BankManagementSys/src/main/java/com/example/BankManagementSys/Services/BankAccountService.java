@@ -5,13 +5,16 @@ import com.example.BankManagementSys.Entities.Customer;
 import com.example.BankManagementSys.Enums.BankAccountStatus;
 import com.example.BankManagementSys.Exceptions.BankAccountNotFoundException;
 import com.example.BankManagementSys.Reposityories.BankAccountRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
+import com.example.BankManagementSys.Entities.BankAccount;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.example.BankManagementSys.Exceptions.EmployeeNotFoundException;
+import com.example.BankManagementSys.Entities.Employee;
 
 @Service
 public class BankAccountService {
@@ -21,6 +24,9 @@ public class BankAccountService {
 
     @Autowired
     private BankAccountRepository bankAccountRepository;
+
+    @Autowired
+    private EmployeeService employeeService;
 
     // ____________________________________ C.R.U.D FUNCTIONS ____________________________________
 
@@ -114,56 +120,6 @@ public class BankAccountService {
                 .filter(account -> account.getStatus().equals(status))
                 .toList();
     }
-//    public boolean updateBalance(int accountId, BigDecimal amount, boolean isDeposit, boolean isLoanPayment) {
-//        try {
-//            // Fetch account and validate existence
-//            BankAccount account = bankAccountRepository.findById(accountId)
-//                    .orElseThrow(() -> new IllegalArgumentException("Account not found."));
-//
-//            // Validate account status
-//            if (account.getStatus() != BankAccountStatus.ACTIVE) {
-//                System.err.println(" Transaction failed: Account is not active.");
-//                return false;
-//            }
-//
-//            // Ensure positive transaction amount (assuming validation is done before calling this)
-//            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-//                System.err.println(" Transaction failed: Amount must be greater than zero.");
-//                return false;
-//            }
-//
-//            if (isDeposit) {
-//                // Perform deposit
-//                account.setBalance(account.getBalance().add(amount));
-//                System.out.println(" Deposit successful. New balance: " + account.getBalance());
-//            } else {
-//                // ** Check Overdraft Limit (Only for Regular Withdrawals) **
-//                BigDecimal newBalance = account.getBalance().subtract(amount);
-//
-//                if (!isLoanPayment && newBalance.compareTo(overdraftLimit) < 0) {
-//                    System.err.println(" Transaction failed: Overdraft limit exceeded.");
-//                    return false;
-//                }
-//
-//                // Perform withdrawal
-//                account.setBalance(newBalance);
-//                System.out.println(" Withdrawal successful. New balance: " + account.getBalance());
-//            }
-//
-//            // Update the account balance in the database
-//            updateBankAccount(account);
-//
-//            // Return success
-//            return true;
-//
-//        } catch (Exception e) {
-//            // Catch all exceptions and return failure
-//            System.err.println(" Unexpected error: " + e.getMessage());
-//            return false;
-//        }
-//
-//    }
-
 
 
     public boolean updateBalance(int accountId, BigDecimal amount, boolean isDeposit, boolean isLoanPayment) {
@@ -225,4 +181,147 @@ public class BankAccountService {
     public List<BankAccount> getBankAccountsByBranchId(int branchId) {
         return bankAccountRepository.findByBranchId(branchId);
     }
+
+
+
+
+    //function that suspend a specific bank account
+    @Transactional
+    public void suspendBankAccount(Long employeeId, int bankAccountId) {
+        // Ensure the employee exists
+        Employee employee = employeeService.getEmployeeById(employeeId);
+        if (employee == null) {
+            throw new EmployeeNotFoundException("Employee with ID " + employeeId + " not found.");
+        }
+
+        // Retrieve the bank account
+        BankAccount bankAccount = getBankAccountById(bankAccountId);
+
+        // ✅ Check if the employee is linked to this account
+        if (!employee.getBankAccounts().contains(bankAccount)) {
+            throw new IllegalStateException("Employee does not have permission to suspend this bank account.");
+        }
+
+        // ✅ Prevent re-suspending an already suspended account
+        if (bankAccount.getStatus() == BankAccountStatus.SUSPENDED) {
+            throw new IllegalStateException("Bank account is already suspended.");
+        }
+
+        // ✅ Change status to SUSPENDED
+        bankAccount.setStatus(BankAccountStatus.SUSPENDED);
+
+        // ✅ Use existing method to update the account
+        updateBankAccount(bankAccount);
+    }
+
+
+
+    // ✅ Function that restricts a specific bank account
+    @Transactional
+    public void restrictBankAccount(Long employeeId, int bankAccountId) {
+        // Ensure the employee exists
+        Employee employee = employeeService.getEmployeeById(employeeId);
+        if (employee == null) {
+            throw new EmployeeNotFoundException("Employee with ID " + employeeId + " not found.");
+        }
+
+        // Retrieve the bank account
+        BankAccount bankAccount = getBankAccountById(bankAccountId);
+
+        // ✅ Ensure employee is linked to the branch that owns this account
+        boolean isAuthorized = employee.getBranches().contains(bankAccount.getBranch());
+        if (!isAuthorized) {
+            throw new IllegalStateException("Employee does not have permission to restrict this bank account.");
+        }
+
+        // ✅ Prevent re-restricting an already restricted account
+        if (bankAccount.getStatus() == BankAccountStatus.RESTRICTED) {
+            throw new IllegalStateException("Bank account is already restricted.");
+        }
+
+        // ✅ Change status to RESTRICTED
+        bankAccount.setStatus(BankAccountStatus.RESTRICTED);
+
+        // ✅ Use existing method to update the account
+        updateBankAccount(bankAccount);
+    }
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//    public boolean updateBalance(int accountId, BigDecimal amount, boolean isDeposit, boolean isLoanPayment) {
+//        try {
+//            // Fetch account and validate existence
+//            BankAccount account = bankAccountRepository.findById(accountId)
+//                    .orElseThrow(() -> new IllegalArgumentException("Account not found."));
+//
+//            // Validate account status
+//            if (account.getStatus() != BankAccountStatus.ACTIVE) {
+//                System.err.println(" Transaction failed: Account is not active.");
+//                return false;
+//            }
+//
+//            // Ensure positive transaction amount (assuming validation is done before calling this)
+//            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+//                System.err.println(" Transaction failed: Amount must be greater than zero.");
+//                return false;
+//            }
+//
+//            if (isDeposit) {
+//                // Perform deposit
+//                account.setBalance(account.getBalance().add(amount));
+//                System.out.println(" Deposit successful. New balance: " + account.getBalance());
+//            } else {
+//                // ** Check Overdraft Limit (Only for Regular Withdrawals) **
+//                BigDecimal newBalance = account.getBalance().subtract(amount);
+//
+//                if (!isLoanPayment && newBalance.compareTo(overdraftLimit) < 0) {
+//                    System.err.println(" Transaction failed: Overdraft limit exceeded.");
+//                    return false;
+//                }
+//
+//                // Perform withdrawal
+//                account.setBalance(newBalance);
+//                System.out.println(" Withdrawal successful. New balance: " + account.getBalance());
+//            }
+//
+//            // Update the account balance in the database
+//            updateBankAccount(account);
+//
+//            // Return success
+//            return true;
+//
+//        } catch (Exception e) {
+//            // Catch all exceptions and return failure
+//            System.err.println(" Unexpected error: " + e.getMessage());
+//            return false;
+//        }
+//
+//    }

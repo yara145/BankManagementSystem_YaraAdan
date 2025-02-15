@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import com.example.BankManagementSys.Enums.BankAccountStatus;
 
 import java.util.Date;
 import java.util.List;
@@ -117,6 +118,7 @@ public class CustomerService extends UserService {
 
         // Save customer to persist relationship
         customerRepository.save(customer);
+        bankAccount.setStatus(BankAccountStatus.ACTIVE); //set active status for bank account
 
         System.out.println("**** BankAccount Has Been Added to Customer ****");
     }
@@ -152,6 +154,7 @@ public class CustomerService extends UserService {
 
         customerRepository.delete(customer);
     }
+
     //  Disconnect Bank Account from Customer
     @Transactional
     public void removeBankAccountFromCustomer(Long customerId, int bankAccountId) {

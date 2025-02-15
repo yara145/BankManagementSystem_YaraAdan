@@ -1,10 +1,8 @@
 package com.example.BankManagementSys.Services;
 
-import com.example.BankManagementSys.Entities.Transaction;
-import com.example.BankManagementSys.Entities.Loan;
-import com.example.BankManagementSys.Entities.TransferTransaction;
-import com.example.BankManagementSys.Entities.WithdrawalTransaction;
+import com.example.BankManagementSys.Entities.*;
 
+import com.example.BankManagementSys.Enums.BankAccountStatus;
 import com.example.BankManagementSys.Exceptions.TransactionAmountInvalidException;
 import com.example.BankManagementSys.Reposityories.LoanRepository;
 import com.example.BankManagementSys.Reposityories.TransferTransactionRepoistory;
@@ -114,6 +112,16 @@ public class LoanService {
 
     @Transactional
     public Loan connectLoanToBank(Loan loan, int bankAccountId) {
+
+        BankAccount account = bankAccountService.getBankAccountById(bankAccountId);
+        if (account == null) {
+            throw new IllegalArgumentException("Loan must be linked to a valid bank account.");
+        }
+
+        // ✅ Ensure the bank account is ACTIVE
+        if (account.getStatus() != BankAccountStatus.ACTIVE) {
+            throw new IllegalStateException("❌ Loan failed: Bank account ID " + bankAccountId + " is" + account.getStatus() + ".");
+        }
         // Connect the transfer to the bank account
         transactionService.connectTransactionToBankAccount(loan, bankAccountId);
         // Update bank account balance

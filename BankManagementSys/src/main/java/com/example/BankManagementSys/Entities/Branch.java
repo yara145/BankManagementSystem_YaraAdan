@@ -31,8 +31,9 @@ public class Branch implements Serializable {
 
     @ToString.Exclude
     @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonManagedReference(value = "bankAccount-branch")  // ✅ Add a unique name
     private List<BankAccount> bankAccounts;
+
 
     @ToString.Exclude
     @ManyToMany(mappedBy = "branches")

@@ -287,10 +287,6 @@ public class BankManagementSysApplication implements CommandLineRunner {
 
 
 
-
-
-
-
 //		System.out.println("✅ Testing API Connection...\n");
 //		BigDecimal usdRate = currencyExchangeService.getExchangeRateForCurrency("USD");
 //		System.out.println("Exchange Rate for USD: " + usdRate);
