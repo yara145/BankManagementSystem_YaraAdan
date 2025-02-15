@@ -205,5 +205,50 @@ public class EmployeeService extends UserService {
         bankAccountService.updateBankAccount(bankAccount);
     }
 
+    @Transactional
+    public Customer updateCustomerByEmployee(Long employeeId, Long customerId, Customer updatedCustomer) {
+        // Validate employee existence
+        Employee employee = getEmployeeById(employeeId);
+
+        // Retrieve the existing customer
+        Customer existingCustomer = customerService.getCustomerById(customerId);
+
+        // ✅ Ensure employee is assigned to a branch where the customer has an account
+        boolean isAuthorized = employee.getBranches().stream()
+                .anyMatch(branch -> branch.getBankAccounts().stream()
+                        .anyMatch(acc -> acc.getCustomer().getIdCode().equals(customerId)));
+
+        if (!isAuthorized) {
+            throw new IllegalArgumentException("❌ Employee does not have permission to update this customer.");
+        }
+
+        // ✅ Only update fields that are provided in the request
+        if (updatedCustomer.getName() != null) {
+            existingCustomer.setName(updatedCustomer.getName());
+        }
+        if (updatedCustomer.getAddress() != null) {
+            existingCustomer.setAddress(updatedCustomer.getAddress());
+        }
+        if (updatedCustomer.getEmail() != null && !existingCustomer.getEmail().equals(updatedCustomer.getEmail())) {
+            existingCustomer.setEmail(updatedCustomer.getEmail());
+            customerService.validateCustomerDetails(existingCustomer); // ✅ Only validate if email changes
+        }
+        if (updatedCustomer.getBirthdate() != null) {
+            existingCustomer.setBirthdate(updatedCustomer.getBirthdate());
+        }
+
+        // ❌ Prevent updating `userName`
+        if (updatedCustomer.getUserName() != null) {
+            throw new IllegalArgumentException("❌ Username cannot be changed.");
+        }
+
+        // ✅ Save and return updated customer
+        return customerService.updateCustomer(existingCustomer);
+    }
+
+
+
+
+
 
 }

@@ -50,11 +50,10 @@ public class CustomerService extends UserService {
         }
     }
 
-
-
-    public void updateCustomer(Customer customer) {
+    @Transactional
+    public Customer updateCustomer(Customer customer) {
         try {
-            this.customerRepository.save(customer);
+            return customerRepository.save(customer); // ✅ Return the updated customer
         } catch (DataIntegrityViolationException e) {
             Throwable rootCause = e.getRootCause();
             String errorMessage = "A record with the provided unique value already exists.";
@@ -62,8 +61,6 @@ public class CustomerService extends UserService {
             if (rootCause instanceof ConstraintViolationException) {
                 if (rootCause.getMessage().contains("email")) {
                     errorMessage = "A user with this email already exists.";
-                } else if (rootCause.getMessage().contains("userName")) {
-                    errorMessage = "A user with this username already exists.";
                 }
             }
 
@@ -72,19 +69,22 @@ public class CustomerService extends UserService {
         }
     }
 
+
+
+
     public List<Customer> getAllCustomers() {
         return this.customerRepository.findAll();
     }
 
-    public void deleteCustomer(Long customerId) {
-        Customer existingCustomer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new CustomerNotFoundException("Customer with ID " + customerId + " not found."));
-
-        if (!existingCustomer.getBankAccounts().isEmpty()) {
-            throw new IllegalStateException("Cannot delete a customer with associated bank accounts.");
-        }
-        customerRepository.deleteById(customerId);
-    }
+//    public void deleteCustomer(Long customerId) {
+//        Customer existingCustomer = customerRepository.findById(customerId)
+//                .orElseThrow(() -> new CustomerNotFoundException("Customer with ID " + customerId + " not found."));
+//
+//        if (!existingCustomer.getBankAccounts().isEmpty()) {
+//            throw new IllegalStateException("Cannot delete a customer with associated bank accounts.");
+//        }
+//        customerRepository.deleteById(customerId);
+//    }
 
     // ✅ Get customer by ID
     public Customer getCustomerById(Long customerId) {
@@ -196,5 +196,25 @@ public class CustomerService extends UserService {
             throw new IllegalArgumentException("Customer's age is below the required minimum: " + minCustomerAge);
         }
     }
+    @Transactional
+    public void deleteCustomer(Long customerId) {
+        Customer existingCustomer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer with ID " + customerId + " not found."));
+
+        // ✅ Step 1: Close all Bank Accounts
+        for (BankAccount account : existingCustomer.getBankAccounts()) {
+            account.setStatus(BankAccountStatus.CLOSED);
+            account.setCustomer(null); // Unlink from the customer
+            bankAccountService.updateBankAccount(account);
+        }
+
+        // ✅ Step 2: Remove the link to bank accounts
+        existingCustomer.getBankAccounts().clear();
+        customerRepository.save(existingCustomer);
+
+        // ✅ Step 3: Delete the customer
+        customerRepository.delete(existingCustomer);
+    }
+
 
 }

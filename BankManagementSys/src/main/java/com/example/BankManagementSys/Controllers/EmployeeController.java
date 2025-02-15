@@ -9,6 +9,7 @@ import com.example.BankManagementSys.Exceptions.EmployeeNotFoundException;
 import com.example.BankManagementSys.Services.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -292,6 +293,37 @@ public class EmployeeController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("✅ Customer '" + newCustomer.getUserName() + "' added successfully.");
         } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ Error: " + e.getMessage());
+        }
+
+    }
+
+    @PutMapping("{employeeId}/updateCustomer/{customerId}")
+    public ResponseEntity<?> updateCustomerByEmployee(
+            @PathVariable Long employeeId,
+            @PathVariable Long customerId,
+            @RequestBody Customer updatedCustomer) {
+        try {
+            // ✅ Call the updated method
+            Customer updated = employeeService.updateCustomerByEmployee(employeeId, customerId, updatedCustomer);
+            return ResponseEntity.ok(updated); // ✅ Return updated customer
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("❌ Email already exists.");
+        }
+    }
+
+
+    @DeleteMapping("{employeeId}/deleteCustomer/{customerId}")
+    public ResponseEntity<String> deleteCustomerByEmployee(
+            @PathVariable Long employeeId,
+            @PathVariable Long customerId) {
+        try {
+            employeeService.getEmployeeById(employeeId); // Ensure employee exists
+            customerService.deleteCustomer(customerId);
+            return ResponseEntity.ok("✅ Customer deleted successfully, and their bank accounts were closed.");
+        } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ Error: " + e.getMessage());
         }
     }
