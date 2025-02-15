@@ -2,10 +2,12 @@ package com.example.BankManagementSys.Controllers;
 
 import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Branch;
+import com.example.BankManagementSys.Entities.Customer;
 import com.example.BankManagementSys.Entities.Employee;
 import com.example.BankManagementSys.Exceptions.BankAccountNotFoundException;
 import com.example.BankManagementSys.Exceptions.EmployeeNotFoundException;
 import com.example.BankManagementSys.Services.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -232,7 +234,7 @@ public class EmployeeController {
             }
 
             // Use existing method to suspend the account
-            bankAccountService.suspendBankAccount(employeeId, bankAccountId);
+       employeeService.suspendBankAccount(employeeId, bankAccountId);
 
             return ResponseEntity.ok("Bank account ID " + bankAccountId + " has been suspended.");
         } catch (IllegalArgumentException e) {
@@ -261,13 +263,39 @@ public class EmployeeController {
             }
 
             // Use existing method to restrict the account
-            bankAccountService.restrictBankAccount(employeeId, bankAccountId);
+         employeeService.restrictBankAccount(employeeId, bankAccountId);
 
             return ResponseEntity.ok("Bank account ID " + bankAccountId + " has been restricted.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
+    //add new customer
+    @PostMapping("{employeeId}/addCustomer")
+    public ResponseEntity<String> addCustomerByEmployee(
+            @PathVariable Long employeeId,
+            @RequestBody Customer customer) {
+        try {
+            // Validate employee existence
+            Employee employee = employeeService.getEmployeeById(employeeId);
+
+            // Ensure the employee is assigned to at least one branch
+            if (employee.getBranches().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("❌ Employee is not assigned to any branch and cannot add customers.");
+            }
+
+            // Securely create the customer
+            Customer newCustomer = employeeService.addCustomerByEmployee(employeeId, customer);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("✅ Customer '" + newCustomer.getUserName() + "' added successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ Error: " + e.getMessage());
+        }
+    }
+
 
 
 

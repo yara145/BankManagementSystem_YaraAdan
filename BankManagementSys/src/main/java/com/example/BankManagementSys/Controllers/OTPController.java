@@ -49,7 +49,7 @@ public class OTPController {
             Customer tempCustomer = new Customer();
             tempCustomer.setEmail(normalizedEmail);
             tempCustomer.setUserName(userName);
-            tempCustomer.setFirstName(firstName);  // ✅ Set firstName
+            tempCustomer.setName(firstName);  // ✅ Set firstName
             tempCustomer.setBirthdate(Date.valueOf(birthdate));
             tempCustomer.setPassword(password);
 

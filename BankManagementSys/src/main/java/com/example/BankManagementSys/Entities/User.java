@@ -20,7 +20,7 @@ public abstract class User implements Serializable {
     private String userName;
 
     @Column(name = "name", nullable = false)
-    private String firstName;
+    private String name;
 
 
     @Column(name = "email", nullable = false, unique = true)

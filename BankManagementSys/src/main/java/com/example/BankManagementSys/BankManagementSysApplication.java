@@ -72,7 +72,7 @@ public class BankManagementSysApplication implements CommandLineRunner {
 			System.err.println("Invalid birthdate format: " + e.getMessage());
 		}
 
-		customer.setFirstName("Adan");
+		customer.setName("Adan");
 		// Add customer using the service
 		customerService.addNewCustomer(customer);
 
@@ -93,7 +93,7 @@ public class BankManagementSysApplication implements CommandLineRunner {
 			System.err.println("Invalid birthdate format: " + e.getMessage());
 		}
 
-		customer2.setFirstName("Anne");
+		customer2.setName("Anne");
 
 		// Add customer using the service
 		customerService.addNewCustomer(customer2);
@@ -156,7 +156,7 @@ public class BankManagementSysApplication implements CommandLineRunner {
 			System.err.println("Invalid birthdate format: " + e.getMessage());
 		}
 
-		employee.setFirstName("yara");
+		employee.setName("yara");
 
 
 		// Set the work start date

@@ -25,8 +25,7 @@ public class BankAccountService {
     @Autowired
     private BankAccountRepository bankAccountRepository;
 
-    @Autowired
-    private EmployeeService employeeService;
+
 
     // ____________________________________ C.R.U.D FUNCTIONS ____________________________________
 
@@ -172,7 +171,6 @@ public class BankAccountService {
     }
 
 
-
     // Fetch all bank accounts
     public List<BankAccount> getAllBankAccounts() {
         return bankAccountRepository.findAll();
@@ -184,67 +182,6 @@ public class BankAccountService {
 
 
 
-
-    //function that suspend a specific bank account
-    @Transactional
-    public void suspendBankAccount(Long employeeId, int bankAccountId) {
-        // Ensure the employee exists
-        Employee employee = employeeService.getEmployeeById(employeeId);
-        if (employee == null) {
-            throw new EmployeeNotFoundException("Employee with ID " + employeeId + " not found.");
-        }
-
-        // Retrieve the bank account
-        BankAccount bankAccount = getBankAccountById(bankAccountId);
-
-        // ✅ Check if the employee is linked to this account
-        if (!employee.getBankAccounts().contains(bankAccount)) {
-            throw new IllegalStateException("Employee does not have permission to suspend this bank account.");
-        }
-
-        // ✅ Prevent re-suspending an already suspended account
-        if (bankAccount.getStatus() == BankAccountStatus.SUSPENDED) {
-            throw new IllegalStateException("Bank account is already suspended.");
-        }
-
-        // ✅ Change status to SUSPENDED
-        bankAccount.setStatus(BankAccountStatus.SUSPENDED);
-
-        // ✅ Use existing method to update the account
-        updateBankAccount(bankAccount);
-    }
-
-
-
-    // ✅ Function that restricts a specific bank account
-    @Transactional
-    public void restrictBankAccount(Long employeeId, int bankAccountId) {
-        // Ensure the employee exists
-        Employee employee = employeeService.getEmployeeById(employeeId);
-        if (employee == null) {
-            throw new EmployeeNotFoundException("Employee with ID " + employeeId + " not found.");
-        }
-
-        // Retrieve the bank account
-        BankAccount bankAccount = getBankAccountById(bankAccountId);
-
-        // ✅ Ensure employee is linked to the branch that owns this account
-        boolean isAuthorized = employee.getBranches().contains(bankAccount.getBranch());
-        if (!isAuthorized) {
-            throw new IllegalStateException("Employee does not have permission to restrict this bank account.");
-        }
-
-        // ✅ Prevent re-restricting an already restricted account
-        if (bankAccount.getStatus() == BankAccountStatus.RESTRICTED) {
-            throw new IllegalStateException("Bank account is already restricted.");
-        }
-
-        // ✅ Change status to RESTRICTED
-        bankAccount.setStatus(BankAccountStatus.RESTRICTED);
-
-        // ✅ Use existing method to update the account
-        updateBankAccount(bankAccount);
-    }
 
 
 }

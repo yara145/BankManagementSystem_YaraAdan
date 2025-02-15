@@ -2,9 +2,12 @@ package com.example.BankManagementSys.Services;
 
 import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.Branch;
+import com.example.BankManagementSys.Entities.Customer;
 import com.example.BankManagementSys.Entities.Employee;
+import com.example.BankManagementSys.Enums.BankAccountStatus;
 import com.example.BankManagementSys.Exceptions.EmployeeNotFoundException;
 import com.example.BankManagementSys.Reposityories.BranchRepository;
+import com.example.BankManagementSys.Reposityories.CustomerRepository;
 import com.example.BankManagementSys.Reposityories.EmployeeRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,11 @@ public class EmployeeService extends UserService {
 
     @Autowired
     private BranchRepository branchRepository;
+
+    @Autowired
+    private CustomerService customerService;
+    @Autowired
+   private BankAccountService bankAccountService;
 
     // ✅ Get Employee by ID with Error Handling
     public Employee getEmployeeById(Long id) {
@@ -117,4 +125,85 @@ public class EmployeeService extends UserService {
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with username: " + username));
         return employee.getIdCode();
     }
+
+    @Transactional
+    public Customer addCustomerByEmployee(Long employeeId, Customer customer) {
+        // Validate employee existence
+        Employee employee = getEmployeeById(employeeId);
+
+        // Ensure the employee is assigned to at least one branch
+        if (employee.getBranches().isEmpty()) {
+            throw new IllegalArgumentException("❌ Employee is not assigned to any branch and cannot add customers.");
+        }
+
+        // Validate customer details (avoid duplicate emails or usernames)
+        customerService.validateCustomerDetails(customer);
+
+        // ✅ Use existing method to add a new customer securely
+        return customerService.addNewCustomer(customer);
+    }
+
+
+    //function that suspend a specific bank account
+    @Transactional
+    public void suspendBankAccount(Long employeeId, int bankAccountId) {
+        // Ensure the employee exists
+        Employee employee = getEmployeeById(employeeId);
+        if (employee == null) {
+            throw new EmployeeNotFoundException("Employee with ID " + employeeId + " not found.");
+        }
+
+        // Retrieve the bank account
+        BankAccount bankAccount =  bankAccountService.getBankAccountById(bankAccountId);
+
+        // ✅ Check if the employee is linked to this account
+        if (!employee.getBankAccounts().contains(bankAccount)) {
+            throw new IllegalStateException("Employee does not have permission to suspend this bank account.");
+        }
+
+        // ✅ Prevent re-suspending an already suspended account
+        if (bankAccount.getStatus() == BankAccountStatus.SUSPENDED) {
+            throw new IllegalStateException("Bank account is already suspended.");
+        }
+
+        // ✅ Change status to SUSPENDED
+        bankAccount.setStatus(BankAccountStatus.SUSPENDED);
+
+        // ✅ Use existing method to update the account
+        bankAccountService.updateBankAccount(bankAccount);
+    }
+
+
+
+    // ✅ Function that restricts a specific bank account
+    @Transactional
+    public void restrictBankAccount(Long employeeId, int bankAccountId) {
+        // Ensure the employee exists
+        Employee employee = getEmployeeById(employeeId);
+        if (employee == null) {
+            throw new EmployeeNotFoundException("Employee with ID " + employeeId + " not found.");
+        }
+
+        // Retrieve the bank account
+        BankAccount bankAccount =  bankAccountService.getBankAccountById(bankAccountId);
+
+        // ✅ Ensure employee is linked to the branch that owns this account
+        boolean isAuthorized = employee.getBranches().contains(bankAccount.getBranch());
+        if (!isAuthorized) {
+            throw new IllegalStateException("Employee does not have permission to restrict this bank account.");
+        }
+
+        // ✅ Prevent re-restricting an already restricted account
+        if (bankAccount.getStatus() == BankAccountStatus.RESTRICTED) {
+            throw new IllegalStateException("Bank account is already restricted.");
+        }
+
+        // ✅ Change status to RESTRICTED
+        bankAccount.setStatus(BankAccountStatus.RESTRICTED);
+
+        // ✅ Use existing method to update the account
+        bankAccountService.updateBankAccount(bankAccount);
+    }
+
+
 }

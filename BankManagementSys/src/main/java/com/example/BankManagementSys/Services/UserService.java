@@ -26,7 +26,7 @@ public class UserService {
     public void validateUser(User user) {
         try {
             // ✅ Ensure required fields are not null or empty
-            if (user.getFirstName() == null || user.getFirstName().trim().isEmpty()) {
+            if (user.getName() == null || user.getName().trim().isEmpty()) {
                 throw new IllegalArgumentException("Full name is required.");
             }
             if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
@@ -55,7 +55,7 @@ public class UserService {
             }
 
             // ✅ Validate Name Format (Only letters)
-            if (!NAME_PATTERN.matcher(user.getFirstName()).matches()) {
+            if (!NAME_PATTERN.matcher(user.getName()).matches()) {
                 throw new IllegalArgumentException("Name must contain only letters.");
             }
 
