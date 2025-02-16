@@ -71,22 +71,21 @@ public class WithdrawalTransactionService {
         return withdrawalRepoistory.findAll();
 
     }
-
     @Transactional
     public WithdrawalTransaction connectTransactionToBank(WithdrawalTransaction withdrawal, int bankAccountId) {
         BankAccount account = bankAccountService.getBankAccountById(bankAccountId);
+
+        // ✅ Ensure the account exists BEFORE using it
+        if (account == null) {
+            throw new IllegalArgumentException("Withdrawal transaction must be linked to a valid bank account.");
+        }
+
         // ✅ Ensure the bank account is ACTIVE
         if (account.getStatus() != BankAccountStatus.ACTIVE) {
             throw new IllegalStateException("❌ Withdrawal failed: Bank account ID " + bankAccountId + " is " + account.getStatus() + ".");
         }
 
-        if (account == null) {
-            throw new IllegalArgumentException("Withdrawal transaction must be linked to a valid bank account.");
-        }
-
         transactionService.connectTransactionToBankAccount(withdrawal, bankAccountId);
-
-
 
         BigDecimal withdrawalAmount = withdrawal.getWithdrawalAmount();
         BigDecimal exchangeRate = currencyExchangeService.getExchangeRateForCurrency(withdrawal.getCurrencyCode());
@@ -95,15 +94,9 @@ public class WithdrawalTransactionService {
             throw new IllegalArgumentException("Invalid exchange rate received for currency: " + withdrawal.getCurrencyCode());
         }
 
-        // ✅ Correct Conversion Logic
+        // ✅ Convert only if the withdrawal currency is different from the account currency
         if (!account.getCurrencyCode().equalsIgnoreCase(withdrawal.getCurrencyCode())) {
-            if (withdrawal.getCurrencyCode().equalsIgnoreCase("ILS")) {
-                // Convert ILS → EUR (Divide by 3.7037)
-                withdrawalAmount = withdrawalAmount.divide(BigDecimal.valueOf(3.7037), 6, RoundingMode.HALF_UP);
-            } else {
-                // Convert EUR → ILS (Multiply by 3.7037)
-                withdrawalAmount = withdrawalAmount.multiply(BigDecimal.valueOf(3.7037));
-            }
+            withdrawalAmount = withdrawalAmount.divide(exchangeRate, 6, RoundingMode.HALF_UP);
         }
 
         // ✅ Ensure rounding AFTER conversion
@@ -117,12 +110,13 @@ public class WithdrawalTransactionService {
             throw new IllegalArgumentException("❌ Error: Withdrawal amount must be greater than zero after conversion.");
         }
 
-        // ✅ Store correct exchange rate and final withdrawal amount
-        withdrawal.setExchangeRate(exchangeRate);
+        // ✅ Store the actual exchange rate used
+        BigDecimal finalExchangeRate = withdrawal.getWithdrawalAmount().divide(withdrawalAmount, 6, RoundingMode.HALF_UP);
+        withdrawal.setExchangeRate(finalExchangeRate);
         withdrawal.setWithdrawalAmount(withdrawalAmount);
 
-        // ✅ Properly negate withdrawal amount before updating balance
-        boolean success = bankAccountService.updateBalance(account.getId(), withdrawalAmount.negate(), false, false);
+        // ✅ Pass positive withdrawalAmount, let updateBalance handle subtraction
+        boolean success = bankAccountService.updateBalance(account.getId(), withdrawalAmount, false, false);
         if (!success) {
             System.err.println("❌ Withdrawal failed for account ID: " + account.getId());
             return null;
@@ -224,3 +218,9 @@ public class WithdrawalTransactionService {
 //
 //        return withdrawalRepoistory.save(withdrawal);
 //    }
+
+
+
+
+
+
