@@ -6,16 +6,15 @@ import com.example.BankManagementSys.Entities.LoanPayment;
 import com.example.BankManagementSys.Enums.BankAccountStatus;
 import com.example.BankManagementSys.Reposityories.LoanPaymentRepository;
 import com.example.BankManagementSys.Reposityories.LoanRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import com.example.BankManagementSys.Enums.LoanType;
+
 @Service
 @EnableScheduling // Enables scheduled tasks
 public class LoanPaymentService {
@@ -27,6 +26,10 @@ public class LoanPaymentService {
     private LoanRepository loanRepository;
     @Autowired
     private BankAccountService bankAccountService;
+    @Value("${loan.default.interest.rate}")
+    private double defaultInterestRate;
+
+
     // ✅ This method is called by the scheduler
     public void processMonthlyLoanPayments() {
         List<Loan> loans = loanRepository.findAll();
@@ -39,55 +42,172 @@ public class LoanPaymentService {
     }
 
     private void makeLoanPayment(Loan loan) {
-
         BankAccount account = loan.getBankAccount();
 
         // ✅ Ensure the bank account is ACTIVE
         if (account.getStatus() != BankAccountStatus.ACTIVE) {
-            throw new IllegalStateException("❌ Loan Payment failed: Bank account ID " + account.getId() + " is" + account.getStatus() + ".");
+            throw new IllegalStateException("❌ Loan Payment failed: Bank account ID " + account.getId() + " is " + account.getStatus() + ".");
         }
 
-        double monthlyInterestRate = loan.getInterestRate() / 100 / 12;
-        double totalPayment;
+        // ✅ Get the monthly interest rate
+        double monthlyInterestRate = defaultInterestRate / 100 / 12;
 
-        if (loan.getLoanType() == LoanType.SHPITZER) {
-            // Shpitzer formula: Fixed Monthly Payment
-            totalPayment = (loan.getLoanAmount().doubleValue() * monthlyInterestRate) /
-                    (1 - Math.pow(1 + monthlyInterestRate, -loan.getNumberOfPayments()));
-        } else {
-            // Equal Principal: Fixed Principal, Decreasing Interest
-            double principalPayment = loan.getLoanAmount().doubleValue() / loan.getNumberOfPayments();
-            double interestAmount = loan.getRemainingBalance() * monthlyInterestRate;
-            totalPayment = principalPayment + interestAmount;
+        // ✅ Corrected Shpitzer Formula for Monthly Loan Payment
+        double monthlyPayment = (loan.getLoanAmount().doubleValue() * monthlyInterestRate) /
+                (1 - Math.pow(1 + monthlyInterestRate, -loan.getNumberOfPayments()));
+
+        // ✅ Calculate interest for this month
+        double interestAmount = loan.getRemainingBalance() * monthlyInterestRate;
+
+        // ✅ Calculate principal payment (Total Payment - Interest)
+        double principalPayment = monthlyPayment - interestAmount;
+
+        // ✅ Ensure last payment does not overpay
+        if (loan.getRemainingBalance() < monthlyPayment) {
+            monthlyPayment = loan.getRemainingBalance();
+            principalPayment = monthlyPayment; // Last payment should only cover remaining amount
         }
 
-        // Ensure last payment does not overpay
-        if (loan.getRemainingBalance() < totalPayment) {
-            totalPayment = loan.getRemainingBalance();
-        }
+        // ✅ Check if the account has enough balance including overdraft
+        BigDecimal accountBalance = loan.getBankAccount().getBalance();
 
-        // Deduct from bank account
-        boolean success = bankAccountService.updateBalance(loan.getBankAccount().getId(),
-                BigDecimal.valueOf(totalPayment), false, true);
+
+
+
+        // ✅ Deduct from bank account
+        boolean success = bankAccountService.updateBalance(
+                loan.getBankAccount().getId(), BigDecimal.valueOf(monthlyPayment), false, true);
+
         if (!success) return;
 
-        // Update loan balance
-        loan.setRemainingBalance(loan.getRemainingBalance() - totalPayment);
+        // ✅ Update loan balance
+        loan.setRemainingBalance(loan.getRemainingBalance() - principalPayment);
 
-        // Decrease remaining payments, but never below zero
+        // ✅ Reduce remaining payments
         if (loan.getRemainingPaymentsNum() > 0) {
             loan.setRemainingPaymentsNum(loan.getRemainingPaymentsNum() - 1);
         }
 
-        // Save payment
+        // ✅ Save Payment Record
         LoanPayment loanPayment = new LoanPayment();
         loanPayment.setLoan(loan);
-        loanPayment.setPaymentAmount(totalPayment);
+        loanPayment.setPaymentAmount(monthlyPayment);
         loanPayment.setPaymentDateTime(LocalDateTime.now());
 
         loanPaymentRepository.save(loanPayment);
         loanRepository.save(loan);
     }
+
+//    private void makeLoanPayment(Loan loan) {
+//        BankAccount account = loan.getBankAccount();
+//
+//        // ✅ Ensure the bank account is ACTIVE
+//        if (account.getStatus() != BankAccountStatus.ACTIVE) {
+//            throw new IllegalStateException("❌ Loan Payment failed: Bank account ID " + account.getId() + " is " + account.getStatus() + ".");
+//        }
+//
+//        // ✅ Get the monthly interest rate
+//        double monthlyInterestRate = defaultInterestRate / 100 / 12;
+//
+//        // ✅ Corrected Shpitzer Formula for Monthly Loan Payment
+//        double monthlyPayment = (loan.getLoanAmount().doubleValue() * monthlyInterestRate) /
+//                (1 - Math.pow(1 + monthlyInterestRate, -loan.getNumberOfPayments()));
+//
+//
+//        // ✅ Calculate interest for this month
+//        double interestAmount = loan.getRemainingBalance() * monthlyInterestRate;
+//
+//        // ✅ Calculate principal payment (Total Payment - Interest)
+//        double principalPayment = monthlyPayment - interestAmount;
+//
+//        // ✅ Ensure last payment does not overpay
+//        if (loan.getRemainingBalance() < monthlyPayment) {
+//            monthlyPayment = loan.getRemainingBalance();
+//            principalPayment = monthlyPayment; // Last payment should only cover remaining amount
+//        }
+//
+//        // ✅ Ensure the bank account has enough funds before deducting
+//        BigDecimal accountBalance = loan.getBankAccount().getBalance();
+//        if (accountBalance.compareTo(BigDecimal.valueOf(monthlyPayment)) < 0) {
+//            System.err.println("❌ Insufficient funds. Skipping loan payment.");
+//            return;
+//        }
+//
+//        // ✅ Deduct from bank account
+//        boolean success = bankAccountService.updateBalance(
+//                loan.getBankAccount().getId(), BigDecimal.valueOf(monthlyPayment), false, true);
+//
+//        if (!success) return;
+//
+//        // ✅ Update loan balance
+//        loan.setRemainingBalance(loan.getRemainingBalance() - principalPayment);
+//
+//        // ✅ Reduce remaining payments
+//        if (loan.getRemainingPaymentsNum() > 0) {
+//            loan.setRemainingPaymentsNum(loan.getRemainingPaymentsNum() - 1);
+//        }
+//
+//        // ✅ Save Payment Record
+//        LoanPayment loanPayment = new LoanPayment();
+//        loanPayment.setLoan(loan);
+//        loanPayment.setPaymentAmount(monthlyPayment);
+//        loanPayment.setPaymentDateTime(LocalDateTime.now());
+//
+//        loanPaymentRepository.save(loanPayment);
+//        loanRepository.save(loan);
+//    }
+
+
+//    private void makeLoanPayment(Loan loan) {
+//
+//        BankAccount account = loan.getBankAccount();
+//
+//        // ✅ Ensure the bank account is ACTIVE
+//        if (account.getStatus() != BankAccountStatus.ACTIVE) {
+//            throw new IllegalStateException("❌ Loan Payment failed: Bank account ID " + account.getId() + " is" + account.getStatus() + ".");
+//        }
+//
+//        double monthlyInterestRate = loan.getInterestRate() / 100 / 12;
+//        double totalPayment;
+//
+//        if (loan.getLoanType() == LoanType.SHPITZER) {
+//            // Shpitzer formula: Fixed Monthly Payment
+//            totalPayment = (loan.getLoanAmount().doubleValue() * monthlyInterestRate) /
+//                    (1 - Math.pow(1 + monthlyInterestRate, -loan.getNumberOfPayments()));
+//        } else {
+//            // Equal Principal: Fixed Principal, Decreasing Interest
+//            double principalPayment = loan.getLoanAmount().doubleValue() / loan.getNumberOfPayments();
+//            double interestAmount = loan.getRemainingBalance() * monthlyInterestRate;
+//            totalPayment = principalPayment + interestAmount;
+//        }
+//
+//        // Ensure last payment does not overpay
+//        if (loan.getRemainingBalance() < totalPayment) {
+//            totalPayment = loan.getRemainingBalance();
+//        }
+//
+//        // Deduct from bank account
+//        boolean success = bankAccountService.updateBalance(loan.getBankAccount().getId(),
+//                BigDecimal.valueOf(totalPayment), false, true);
+//        if (!success) return;
+//
+//        // Update loan balance
+//        loan.setRemainingBalance(loan.getRemainingBalance() - totalPayment);
+//
+//        // Decrease remaining payments, but never below zero
+//        if (loan.getRemainingPaymentsNum() > 0) {
+//            loan.setRemainingPaymentsNum(loan.getRemainingPaymentsNum() - 1);
+//        }
+//
+//        // Save payment
+//        LoanPayment loanPayment = new LoanPayment();
+//        loanPayment.setLoan(loan);
+//        loanPayment.setPaymentAmount(totalPayment);
+//        loanPayment.setPaymentDateTime(LocalDateTime.now());
+//
+//        loanPaymentRepository.save(loanPayment);
+//        loanRepository.save(loan);
+//    }
 
 
     // ** Get Payments by Loan ID **

@@ -328,6 +328,21 @@ public class EmployeeController {
         }
     }
 
+    @PutMapping("activateBankAccount/{employeeId}/{bankAccountId}")
+    public ResponseEntity<String> activateBankAccount(
+            @PathVariable Long employeeId,
+            @PathVariable int bankAccountId) {
+        try {
+            // Call the service method to activate the bank account
+            employeeService.activateBankAccount(employeeId, bankAccountId);
+
+            return ResponseEntity.ok("✅ Bank account ID " + bankAccountId + " has been activated.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ Error: " + e.getMessage());
+        }
+    }
+
+
 
 
 

@@ -246,6 +246,33 @@ public class EmployeeService extends UserService {
         return customerService.updateCustomer(existingCustomer);
     }
 
+    @Transactional
+    public void activateBankAccount(Long employeeId, int bankAccountId) {
+        // Ensure the employee exists
+        Employee employee = getEmployeeById(employeeId);
+
+        // Retrieve the bank account
+        BankAccount bankAccount = bankAccountService.getBankAccountById(bankAccountId);
+
+        // ✅ Ensure employee is assigned to the branch of this account
+        boolean isAuthorized = employee.getBranches().contains(bankAccount.getBranch());
+        if (!isAuthorized) {
+            throw new IllegalStateException("Employee does not have permission to activate this bank account.");
+        }
+
+        // ✅ Prevent re-activating an already active account
+        if (bankAccount.getStatus() == BankAccountStatus.ACTIVE) {
+            throw new IllegalStateException("Bank account is already active.");
+        }
+
+        // ✅ Change status to ACTIVE
+        bankAccount.setStatus(BankAccountStatus.ACTIVE);
+
+        // ✅ Use existing method to update the account
+        bankAccountService.updateBankAccount(bankAccount);
+    }
+
+
 
 
 

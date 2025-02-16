@@ -60,6 +60,7 @@ public class BankAccountService {
      * Update an existing BankAccount's details.
      */
     public BankAccount updateBankAccount(BankAccount account) { // Updated method name to follow Java conventions
+
         if (account.getBalance().compareTo(overdraftLimit) < 0) {
             throw new IllegalArgumentException("Balance exceeds the overdraft limit of " + overdraftLimit);
         }
@@ -119,8 +120,6 @@ public class BankAccountService {
                 .filter(account -> account.getStatus().equals(status))
                 .toList();
     }
-
-
     public boolean updateBalance(int accountId, BigDecimal amount, boolean isDeposit, boolean isLoanPayment) {
         try {
             // Fetch account and validate existence
@@ -140,29 +139,32 @@ public class BankAccountService {
             }
 
             if (isDeposit) {
-                // Perform deposit
+                // ✅ Deposits should only increase the balance
                 account.setBalance(account.getBalance().add(amount));
                 System.out.println("✅ Deposit successful. New balance: " + account.getBalance());
-            } else {
-                // ** Check Overdraft Limit (Only for Regular Withdrawals) **
-                BigDecimal newBalance = account.getBalance().add(amount); // ✅ "amount" is already negative for withdrawals
+            }
+            else if (isLoanPayment) {
+                // ✅ Loan payments should always reduce balance
+                account.setBalance(account.getBalance().subtract(amount.abs()));
+                System.out.println("✅ Loan payment deducted. New balance: " + account.getBalance());
+            }
+            else {
+                // ✅ Fix: Ensure withdrawals reduce balance correctly
+                BigDecimal newBalance = account.getBalance().subtract(amount.abs()); // ✅ Ensures correct subtraction
 
-                // 🔍 Debugging: Print values before checking overdraft condition
+                // 🔍 Debugging Logs
                 boolean isBelowOverdraft = newBalance.compareTo(overdraftLimit) < 0;
-                boolean shouldSendEmail = !isLoanPayment && isBelowOverdraft;
+                boolean shouldSendEmail = isBelowOverdraft;
 
-                System.out.println("🔍 isLoanPayment: " + isLoanPayment);
-                System.out.println("🔍 newBalance: " + newBalance);
-                System.out.println("🔍 overdraftLimit: " + overdraftLimit);
-                System.out.println("🔍 newBalance.compareTo(overdraftLimit) < 0 -> " + isBelowOverdraft);
-                System.out.println("🔍 Condition (!isLoanPayment && newBalance < overdraftLimit) -> " + shouldSendEmail);
+                System.out.println("🔍 New Balance: " + newBalance);
+                System.out.println("🔍 Overdraft Limit: " + overdraftLimit);
+                System.out.println("🔍 Should Send Email: " + shouldSendEmail);
+
                 account.setBalance(newBalance);
-                if (shouldSendEmail) { // ✅ Send email notification
+                if (shouldSendEmail) {
                     System.out.println("📧 Sending overdraft email...");
                     sendOverdraftEmail(account);
                 }
-
-                // Perform withdrawal
 
                 System.out.println("✅ Withdrawal successful. New balance: " + account.getBalance());
             }
@@ -170,15 +172,14 @@ public class BankAccountService {
             // Update the account balance in the database
             updateBankAccount(account);
 
-            // Return success
             return true;
 
         } catch (Exception e) {
-            // Catch all exceptions and return failure
             System.err.println("❌ Unexpected error: " + e.getMessage());
             return false;
         }
     }
+
 
 
     // Fetch all bank accounts
@@ -285,4 +286,71 @@ public class BankAccountService {
 //            return false;
 //        }
 //
+//    }
+
+//
+//    public boolean updateBalance(int accountId, BigDecimal amount, boolean isDeposit, boolean isLoanPayment) {
+//        try {
+//            // Fetch account and validate existence
+//            BankAccount account = bankAccountRepository.findById(accountId)
+//                    .orElseThrow(() -> new IllegalArgumentException("Account not found."));
+//
+//            // Validate account status
+//            if (account.getStatus() != BankAccountStatus.ACTIVE) {
+//                System.err.println("❌ Transaction failed: Account is not active.");
+//                return false;
+//            }
+//
+//            // ✅ FIX: Allow negative amounts (withdrawals), but block zero values
+//            if (amount.compareTo(BigDecimal.ZERO) == 0) {
+//                System.err.println("❌ Transaction failed: Amount must be greater than zero.");
+//                return false;
+//            }
+//            if (isDeposit) {
+//                // ✅ Deposits should increase the balance
+//                account.setBalance(account.getBalance().add(amount));
+//                BigDecimal newBalance = account.getBalance().subtract(amount.abs()); // ✅ Guarantees correct withdrawal
+//
+//            }
+//            else if (isLoanPayment) {
+//                // ✅ Special handling for Loan Payments (always deduct)
+//                BigDecimal newBalance = account.getBalance().subtract(amount.abs()); // ✅ Ensure correct subtraction
+//                account.setBalance(newBalance);
+//                System.out.println("✅ Loan payment deducted. New balance: " + account.getBalance());
+//            }
+//            else {
+//                // ** Check Overdraft Limit (Only for Regular Withdrawals) **
+//                BigDecimal newBalance = account.getBalance().subtract(amount);
+//
+//                // 🔍 Debugging: Print values before checking overdraft condition
+//                boolean isBelowOverdraft = newBalance.compareTo(overdraftLimit) < 0;
+//                boolean shouldSendEmail = !isLoanPayment && isBelowOverdraft;
+//
+//                System.out.println("🔍 isLoanPayment: " + isLoanPayment);
+//                System.out.println("🔍 newBalance: " + newBalance);
+//                System.out.println("🔍 overdraftLimit: " + overdraftLimit);
+//                System.out.println("🔍 newBalance.compareTo(overdraftLimit) < 0 -> " + isBelowOverdraft);
+//                System.out.println("🔍 Condition (!isLoanPayment && newBalance < overdraftLimit) -> " + shouldSendEmail);
+//                account.setBalance(newBalance);
+//                if (shouldSendEmail) { // ✅ Send email notification
+//                    System.out.println("📧 Sending overdraft email...");
+//                    sendOverdraftEmail(account);
+//                }
+//
+//                // Perform withdrawal
+//
+//                System.out.println("✅ Withdrawal successful. New balance: " + account.getBalance());
+//            }
+//
+//            // Update the account balance in the database
+//            updateBankAccount(account);
+//
+//            // Return success
+//            return true;
+//
+//        } catch (Exception e) {
+//            // Catch all exceptions and return failure
+//            System.err.println("❌ Unexpected error: " + e.getMessage());
+//            return false;
+//        }
 //    }

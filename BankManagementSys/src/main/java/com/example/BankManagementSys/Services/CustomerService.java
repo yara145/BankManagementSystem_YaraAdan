@@ -76,16 +76,6 @@ public class CustomerService extends UserService {
         return this.customerRepository.findAll();
     }
 
-//    public void deleteCustomer(Long customerId) {
-//        Customer existingCustomer = customerRepository.findById(customerId)
-//                .orElseThrow(() -> new CustomerNotFoundException("Customer with ID " + customerId + " not found."));
-//
-//        if (!existingCustomer.getBankAccounts().isEmpty()) {
-//            throw new IllegalStateException("Cannot delete a customer with associated bank accounts.");
-//        }
-//        customerRepository.deleteById(customerId);
-//    }
-
     // ✅ Get customer by ID
     public Customer getCustomerById(Long customerId) {
         return customerRepository.findById(customerId)
@@ -218,3 +208,14 @@ public class CustomerService extends UserService {
 
 
 }
+
+
+//    public void deleteCustomer(Long customerId) {
+//        Customer existingCustomer = customerRepository.findById(customerId)
+//                .orElseThrow(() -> new CustomerNotFoundException("Customer with ID " + customerId + " not found."));
+//
+//        if (!existingCustomer.getBankAccounts().isEmpty()) {
+//            throw new IllegalStateException("Cannot delete a customer with associated bank accounts.");
+//        }
+//        customerRepository.deleteById(customerId);
+//    }

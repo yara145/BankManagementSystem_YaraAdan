@@ -52,14 +52,6 @@ public class LoanController {
             // ✅ Set `remainingBalance` to loanAmount (MISSING FIX)
             loan.setRemainingBalance(loan.getLoanAmount().doubleValue());
 
-            // ✅ Ensure `endPaymentDate` is set correctly
-            if (loan.getStartPaymentDate() != null) {
-                LocalDate startDate = loan.getStartPaymentDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ Error: Start Payment Date is required.");
-            }
 
             // ✅ Save loan transaction
             Loan savedLoan = loanService.addNewLoan(loan);

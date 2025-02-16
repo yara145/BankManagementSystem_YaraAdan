@@ -7,15 +7,14 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import com.example.BankManagementSys.Enums.LoanType;
+
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 @SpringBootApplication
-//@EnableScheduling // Enable scheduled jobs
+@EnableScheduling // Enable scheduled jobs
 public class BankManagementSysApplication implements CommandLineRunner {
 
 	public static void main(String[] args) {
@@ -256,42 +255,30 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		transfer.setAmount(BigDecimal.valueOf(500));
 		transferService.addNewTransferTransaction(transfer);
 		transferService.connectTransactionToBank(transfer,1);
-		System.out.println("*********** Loan **********\n");
- //✅ Loan
-		Loan loan = new Loan();
-
-
-// Set start date to tomorrow
-		Date startPaymentDate = new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24)); // Tomorrow
-		loan.setStartPaymentDate(startPaymentDate);
-
-
- //Set end date to 30 days after the start date
-		Date endPaymentDate = new Date(startPaymentDate.getTime() + (1000L * 60 * 60 * 24 * 30)); // 30 days after tomorrow
-
-		loan.setLoanName("Personal Loan for Yara");
-		loan.setInterestRate(0.3);
-		loan.setNumberOfPayments(5);
-		loan.setLoanAmount(BigDecimal.valueOf(10000));
-		loan.setRemainingBalance(loan.getLoanAmount().doubleValue()); // ✅ Set correct balance
-
-		// ✅ Setting Loan Type
-		loan.setLoanType(LoanType.EQUAL_PRINCIPAL);
-
-		System.out.println(loanService.addNewLoan(loan));
-
-		System.out.println("*********** Print the Loan **********\n" + loan.getTransactionId());
-		System.out.println(loanService.connectLoanToBank(loan, existingBankAccount.getId()));
-
-		System.out.println("*********** Loan Payments are scheduled  **********\n");
 
 
 
-//		System.out.println("✅ Testing API Connection...\n");
-//		BigDecimal usdRate = currencyExchangeService.getExchangeRateForCurrency("USD");
-//		System.out.println("Exchange Rate for USD: " + usdRate);
+
+//		System.out.println("*********** Loan **********\n");
+// //✅ Loan
+//		Loan loan = new Loan();
+//		loan.setLoanName("Personal Loan for Yara");
+//		loan.setInterestRate(0.3);
+//		loan.setNumberOfPayments(5);
+//		loan.setLoanAmount(BigDecimal.valueOf(10000));
+//		loan.setRemainingBalance(loan.getLoanAmount().doubleValue()); // ✅ Set correct balance
+//		System.out.println(loanService.addNewLoan(loan));
+//		System.out.println("*********** Print the Loan **********\n" + loan.getTransactionId());
+//		System.out.println(loanService.connectLoanToBank(loan, existingBankAccount.getId()));
+//		System.out.println("*********** Loan Payments are scheduled  **********\n");
+
+
 
 
 
 	}
 }
+//		System.out.println("✅ Testing API Connection...\n");
+//		BigDecimal usdRate = currencyExchangeService.getExchangeRateForCurrency("USD");
+//		System.out.println("Exchange Rate for USD: " + usdRate);
+

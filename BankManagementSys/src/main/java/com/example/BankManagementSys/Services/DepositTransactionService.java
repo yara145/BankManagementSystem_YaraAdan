@@ -49,7 +49,7 @@ public class DepositTransactionService {
 
 
         deposit.setTransactionDateTime(LocalDateTime.now());
-        deposit.setDescription("Deposit of " + deposit.getDespositAmount() + deposit.getCurrencyCode());
+        deposit.setDescription("Deposit of " + deposit.getDespositAmount() +" "+ deposit.getCurrencyCode());
         return depositRepoistory.save(deposit);
     }
 

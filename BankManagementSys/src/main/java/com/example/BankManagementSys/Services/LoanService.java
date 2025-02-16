@@ -52,20 +52,21 @@ public class LoanService {
             throw new TransactionAmountInvalidException("Loan amount must not exceed " + maxAmount);
         }
 
-        // ✅ Set Default Interest Rate (instead of user input)
-        loan.setInterestRate(defaultInterestRate);
-
-        // ✅ Validate Start Payment Date
-        if (loan.getStartPaymentDate() == null || loan.getStartPaymentDate().before(new Date())) {
-            throw new IllegalArgumentException("Start payment date must be in the future.");
+        // ✅ Set Default Interest Rate (if not provided)
+        if (loan.getInterestRate() == null) {
+            loan.setInterestRate(defaultInterestRate);
         }
 
-        // ✅ Log Loan Details
-        System.out.println("🔹 New Loan Details: " + loan);
+        // ✅ Calculate Fixed Monthly Payment (Shpitzer formula)
+        double monthlyInterestRate = loan.getInterestRate() / 100 / 12;
+        double fixedMonthlyPayment = (loan.getLoanAmount().doubleValue() * monthlyInterestRate) /
+                (1 - Math.pow(1 + monthlyInterestRate, -loan.getNumberOfPayments()));
 
-        // ✅ Save Loan
-        loan.setTransactionDateTime(LocalDateTime.now());
+
+        loan.setRemainingBalance(loan.getLoanAmount().doubleValue());
         loan.setRemainingPaymentsNum(loan.getNumberOfPayments());
+        loan.setTransactionDateTime(LocalDateTime.now());
+        // ✅ Save Loan
         return loanRepository.save(loan);
     }
 
@@ -120,3 +121,34 @@ public class LoanService {
         return loanRepository.findByBankAccountId(accountId);
     }
 }
+
+
+//    public Loan addNewLoan(Loan loan) {
+//        if (loan == null) {
+//            throw new IllegalArgumentException("Loan cannot be null.");
+//        }
+//
+//        // ✅ Validate Loan Amount
+//        if (loan.getLoanAmount() == null || loan.getLoanAmount().compareTo(minAmount) < 0) {
+//            throw new TransactionAmountInvalidException("Loan amount must be at least " + minAmount);
+//        }
+//        if (loan.getLoanAmount().compareTo(maxAmount) > 0) {
+//            throw new TransactionAmountInvalidException("Loan amount must not exceed " + maxAmount);
+//        }
+//
+//        // ✅ Set Default Interest Rate (instead of user input)
+//        loan.setInterestRate(defaultInterestRate);
+//
+//        // ✅ Validate Start Payment Date
+//        if (loan.getStartPaymentDate() == null || loan.getStartPaymentDate().before(new Date())) {
+//            throw new IllegalArgumentException("Start payment date must be in the future.");
+//        }
+//
+//        // ✅ Log Loan Details
+//        System.out.println("🔹 New Loan Details: " + loan);
+//
+//        // ✅ Save Loan
+//        loan.setTransactionDateTime(LocalDateTime.now());
+//        loan.setRemainingPaymentsNum(loan.getNumberOfPayments());
+//        return loanRepository.save(loan);
+//    }
