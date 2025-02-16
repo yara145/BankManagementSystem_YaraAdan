@@ -122,7 +122,7 @@ public class WithdrawalTransactionService {
         withdrawal.setWithdrawalAmount(withdrawalAmount);
 
         // ✅ Properly negate withdrawal amount before updating balance
-        boolean success = bankAccountService.updateBalance(account.getId(), withdrawalAmount.negate(), false, true);
+        boolean success = bankAccountService.updateBalance(account.getId(), withdrawalAmount.negate(), false, false);
         if (!success) {
             System.err.println("❌ Withdrawal failed for account ID: " + account.getId());
             return null;
