@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import com.example.BankManagementSys.Exceptions.EmployeeNotFoundException;
 import com.example.BankManagementSys.Entities.Employee;
-
+import org.springframework.scheduling.annotation.Scheduled;
 @Service
 public class BankAccountService {
 
@@ -129,13 +129,13 @@ public class BankAccountService {
 
             // Validate account status
             if (account.getStatus() != BankAccountStatus.ACTIVE) {
-                System.err.println(" Transaction failed: Account is not active.");
+                System.err.println("❌ Transaction failed: Account is not active.");
                 return false;
             }
 
             // ✅ FIX: Allow negative amounts (withdrawals), but block zero values
             if (amount.compareTo(BigDecimal.ZERO) == 0) {
-                System.err.println(" Transaction failed: Amount must be greater than zero.");
+                System.err.println("❌ Transaction failed: Amount must be greater than zero.");
                 return false;
             }
 
@@ -147,13 +147,23 @@ public class BankAccountService {
                 // ** Check Overdraft Limit (Only for Regular Withdrawals) **
                 BigDecimal newBalance = account.getBalance().add(amount); // ✅ "amount" is already negative for withdrawals
 
-                if (!isLoanPayment && newBalance.compareTo(overdraftLimit) < 0) {
-                    System.err.println(" Transaction failed: Overdraft limit exceeded.");
-                    return false;
+                // 🔍 Debugging: Print values before checking overdraft condition
+                boolean isBelowOverdraft = newBalance.compareTo(overdraftLimit) < 0;
+                boolean shouldSendEmail = !isLoanPayment && isBelowOverdraft;
+
+                System.out.println("🔍 isLoanPayment: " + isLoanPayment);
+                System.out.println("🔍 newBalance: " + newBalance);
+                System.out.println("🔍 overdraftLimit: " + overdraftLimit);
+                System.out.println("🔍 newBalance.compareTo(overdraftLimit) < 0 -> " + isBelowOverdraft);
+                System.out.println("🔍 Condition (!isLoanPayment && newBalance < overdraftLimit) -> " + shouldSendEmail);
+                account.setBalance(newBalance);
+                if (shouldSendEmail) { // ✅ Send email notification
+                    System.out.println("📧 Sending overdraft email...");
+                    sendOverdraftEmail(account);
                 }
 
                 // Perform withdrawal
-                account.setBalance(newBalance);
+
                 System.out.println("✅ Withdrawal successful. New balance: " + account.getBalance());
             }
 
@@ -165,7 +175,7 @@ public class BankAccountService {
 
         } catch (Exception e) {
             // Catch all exceptions and return failure
-            System.err.println(" Unexpected error: " + e.getMessage());
+            System.err.println("❌ Unexpected error: " + e.getMessage());
             return false;
         }
     }
@@ -180,6 +190,20 @@ public class BankAccountService {
         return bankAccountRepository.findByBranchId(branchId);
     }
 
+    @Autowired
+    private EmailService emailService;
+
+    private void sendOverdraftEmail(BankAccount account) {
+        System.out.println("seeeeeeeeeeeeeeend emaaaailllllllll: "+account);
+        String emailBody = String.format(
+                "Dear %s,\n\nYour bank account (ID: %d) has exceeded the overdraft limit of %s ILS. " +
+                        "Your current balance is %s ILS.\n\nPlease deposit funds to avoid additional penalties.\n\nThank you,\nYour Bank",
+                account.getCustomer().getName(), account.getId(), overdraftLimit, account.getBalance()
+        );
+
+        emailService.sendEmail(account.getCustomer().getEmail(), "⚠️ Overdraft Alert", emailBody);
+        System.out.println("📧 Sent overdraft alert to: " + account.getCustomer().getEmail());
+    }
 
 
 

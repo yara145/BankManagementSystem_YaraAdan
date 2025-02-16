@@ -2,13 +2,19 @@ package com.example.BankManagementSys.Controllers;
 
 import com.example.BankManagementSys.Entities.Loan;
 import com.example.BankManagementSys.Exceptions.LoanNotFoundException;
+import com.example.BankManagementSys.Exceptions.TransactionAmountInvalidException;
 import com.example.BankManagementSys.Services.LoanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/loans")
@@ -35,23 +41,46 @@ public class LoanController {
         }
         return ResponseEntity.ok(loan);
     }
-
-    // ✅ Adds a new loan.
     @PostMapping("add")
-    public ResponseEntity<String> addLoan(@RequestBody Loan loan) {
+    public ResponseEntity<?> addLoan(@RequestBody Loan loan) {
+        System.out.println("📌 Debugging Loan: " + loan);
+
         try {
-            loanService.addNewLoan(loan);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Loan added successfully.");
+            // ✅ Ensure transaction date is set
+            loan.setTransactionDateTime(LocalDateTime.now());
+
+            // ✅ Set `remainingBalance` to loanAmount (MISSING FIX)
+            loan.setRemainingBalance(loan.getLoanAmount().doubleValue());
+
+            // ✅ Ensure `endPaymentDate` is set correctly
+            if (loan.getStartPaymentDate() != null) {
+                LocalDate startDate = loan.getStartPaymentDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ Error: Start Payment Date is required.");
+            }
+
+            // ✅ Save loan transaction
+            Loan savedLoan = loanService.addNewLoan(loan);
+
+            System.out.println("✅ Loan Created with ID: " + savedLoan.getTransactionId());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("loanId", savedLoan.getTransactionId()));
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error adding loan: " + e.getMessage());
+                    .body("❌ Error adding loan transaction: " + e.getMessage());
         }
     }
+
+
 
     // ✅ Links a loan to a bank account.
     @PutMapping("connect/{loanId}/{bankAccountId}")
     public ResponseEntity<String> connectLoanToBank(@PathVariable int loanId, @PathVariable int bankAccountId) {
         Loan loan = loanService.getLoanById(loanId);
+
         if (loan == null) {
             throw new LoanNotFoundException("Loan with ID " + loanId + " not found.");
         }

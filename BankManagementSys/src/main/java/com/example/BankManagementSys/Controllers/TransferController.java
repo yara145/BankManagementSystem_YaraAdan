@@ -1,14 +1,18 @@
 package com.example.BankManagementSys.Controllers;
 
+import com.example.BankManagementSys.Entities.BankAccount;
 import com.example.BankManagementSys.Entities.TransferTransaction;
 import com.example.BankManagementSys.Exceptions.TransferTransactionNotFoundException;
 import com.example.BankManagementSys.Exceptions.TransactionAmountInvalidException;
+import com.example.BankManagementSys.Services.BankAccountService;
 import com.example.BankManagementSys.Services.TransferTransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -17,7 +21,8 @@ public class TransferController {
 
     @Autowired
     private TransferTransactionService transferService;
-
+    @Autowired
+    private BankAccountService bankAccountService;
     // ✅ Retrieves all transfer transactions.
     @GetMapping("getAll")
     public ResponseEntity<List<TransferTransaction>> getAllTransfers() {
@@ -38,19 +43,42 @@ public class TransferController {
         return ResponseEntity.ok(transfer);
     }
 
-    // ✅ Adds a new transfer transaction.
     @PostMapping("add")
-    public ResponseEntity<String> addTransfer(@RequestBody TransferTransaction transfer) {
+    public ResponseEntity<?> addTransfer(@RequestBody TransferTransaction transfer) {
+        System.out.println("📌 Debugging Transfer: " + transfer); // Debugging
+
         try {
-            transferService.addNewTransferTransaction(transfer);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Transfer transaction added successfully.");
-        } catch (TransactionAmountInvalidException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            // ✅ Validate transfer amount
+            if (transfer.getAmount() == null || transfer.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("❌ Error: Transfer amount must be greater than zero.");
+            }
+
+            // ✅ Ensure bank account is set (Always assign Bank ID 1)
+            if (transfer.getBankAccount() == null) {
+                BankAccount bankAccount = bankAccountService.getBankAccountById(1); // Fetch Bank ID 1
+                if (bankAccount == null) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("❌ Error: Bank account with ID 1 does not exist.");
+                }
+                transfer.setBankAccount(bankAccount);
+            }
+
+            // ✅ Ensure transaction date is set
+            transfer.setTransactionDateTime(LocalDateTime.now());
+
+            // ✅ Save transfer transaction
+            TransferTransaction savedTransfer = transferService.addNewTransferTransaction(transfer);
+
+            System.out.println("✅ Transfer Created with ID: " + savedTransfer.getTransactionId()); // Debugging
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedTransfer);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error adding transfer transaction: " + e.getMessage());
+                    .body("❌ Error adding transfer transaction: " + e.getMessage());
         }
     }
+
 
     // ✅ Links a transfer transaction to a bank account.
     @PutMapping("connect/{transferId}/{bankAccountId}")

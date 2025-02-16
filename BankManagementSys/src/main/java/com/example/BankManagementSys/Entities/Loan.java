@@ -28,8 +28,6 @@ public class Loan extends Transaction  {
     @Column(name = "remaining_payments_num", nullable = false)
     private int remainingPaymentsNum = 0;
 
-    @Column(name = "end_payment_date")
-    private Date endPaymentDate;
 
     @Column(name = "loan_amount")
     private BigDecimal loanAmount;

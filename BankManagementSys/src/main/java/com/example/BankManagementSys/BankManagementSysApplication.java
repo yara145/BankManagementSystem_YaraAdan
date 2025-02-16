@@ -59,7 +59,7 @@ public class BankManagementSysApplication implements CommandLineRunner {
 		Customer customer = new Customer();
 		customer.setUserName("Adan123");
 		customer.setPassword("1234");
-		customer.setEmail("adan@gmail.com");
+		customer.setEmail("adanorabi12@gmail.com");
 		customer.setAddress("Nazareth");
 
 		// Parse birthdate from string
@@ -268,7 +268,7 @@ public class BankManagementSysApplication implements CommandLineRunner {
 
  //Set end date to 30 days after the start date
 		Date endPaymentDate = new Date(startPaymentDate.getTime() + (1000L * 60 * 60 * 24 * 30)); // 30 days after tomorrow
-		loan.setEndPaymentDate(endPaymentDate);
+
 		loan.setLoanName("Personal Loan for Yara");
 		loan.setInterestRate(0.3);
 		loan.setNumberOfPayments(5);
