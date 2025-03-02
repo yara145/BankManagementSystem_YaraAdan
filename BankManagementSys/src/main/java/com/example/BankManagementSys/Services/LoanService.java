@@ -3,6 +3,7 @@ package com.example.BankManagementSys.Services;
 import com.example.BankManagementSys.Entities.*;
 import com.example.BankManagementSys.Enums.BankAccountStatus;
 import com.example.BankManagementSys.Exceptions.TransactionAmountInvalidException;
+import com.example.BankManagementSys.Exceptions.LoanNotFoundException;
 import com.example.BankManagementSys.Reposityories.LoanRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,7 +84,12 @@ public class LoanService {
 
     // ✅ Connect Loan to Bank Account
     @Transactional
-    public Loan connectLoanToBank(Loan loan, int bankAccountId) {
+    public Loan connectLoanToBank(int loanId, int bankAccountId) {
+        Loan loan = this.getLoanById(loanId);
+
+        if (loan == null) {
+            throw new LoanNotFoundException("Loan with ID " + loanId + " not found.");
+        }
         BankAccount account = bankAccountService.getBankAccountById(bankAccountId);
         if (account == null) {
             throw new IllegalArgumentException("Loan must be linked to a valid bank account.");

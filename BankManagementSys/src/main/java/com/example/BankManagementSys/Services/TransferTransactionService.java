@@ -6,6 +6,7 @@ import com.example.BankManagementSys.Enums.TransferStatus;
 import com.example.BankManagementSys.Exceptions.TransactionAmountInvalidException;
 import com.example.BankManagementSys.Exceptions.TransactionAmountInvalidException;
 import com.example.BankManagementSys.Reposityories.TransferTransactionRepoistory;
+import com.example.BankManagementSys.Exceptions.TransferTransactionNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,11 +64,11 @@ public class TransferTransactionService {
 
 
     @Transactional
-    public TransferTransaction connectTransactionToBank(TransferTransaction transfer, int senderAccountId) {
+    public TransferTransaction connectTransactionToBank(int transferId, int senderAccountId) {
+        TransferTransaction transfer = this.getTransferById(transferId);
         if (transfer == null) {
-            throw new IllegalArgumentException("Transfer cannot be null.");
+            throw new TransferTransactionNotFoundException("Transfer transaction with ID " + transferId + " not found.");
         }
-
 
         // ✅ Fetch sender and receiver accounts
         BankAccount senderAccount = bankAccountService.getBankAccountById(senderAccountId);
@@ -99,7 +100,7 @@ public class TransferTransactionService {
         }
 
 // ✅ Now, connect deposit to the bank account (this updates balance automatically)
-        depositService.connectTransactionToBank(savedDeposit, receiverAccount.getId());
+        depositService.connectTransactionToBank(savedDeposit.getTransactionId(), receiverAccount.getId());
 
 
 

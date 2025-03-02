@@ -19,72 +19,38 @@ public class WithdrawalController {
     @Autowired
     WithdrawalTransactionService withdrawalService;
 
-    // ✅ Retrieves all withdrawal transactions.
+    // ✅ Get all withdrawal transactions
     @GetMapping("getAll")
     public ResponseEntity<List<WithdrawalTransaction>> getAllWithdrawals() {
-        List<WithdrawalTransaction> withdrawals = withdrawalService.getAllWithdrawals();
-        return withdrawals.isEmpty()
-                ? ResponseEntity.status(HttpStatus.NO_CONTENT).body(withdrawals)
-                : ResponseEntity.ok(withdrawals);
+        return ResponseEntity.ok(withdrawalService.getAllWithdrawals());
     }
 
-    // ✅ Retrieves a specific withdrawal transaction by ID.
+
+    // ✅ Get a withdrawal transaction by ID
     @GetMapping("get/{id}")
     public ResponseEntity<WithdrawalTransaction> getWithdrawalById(@PathVariable int id) {
-        WithdrawalTransaction withdrawal = withdrawalService.getWithdrawalById(id);
-        if (withdrawal == null) {
-            throw new WithdrawalTransactionNotFoundException("Withdrawal transaction with ID " + id + " not found.");
-        }
-        return ResponseEntity.ok(withdrawal);
+        return ResponseEntity.ok(withdrawalService.getWithdrawalById(id));
     }
 
+    // ✅ Add a new withdrawal transaction
     @PostMapping("add")
-    public ResponseEntity<?> addWithdrawal(@RequestBody WithdrawalTransaction withdrawal) {
-        System.out.println("📌 Debugging Withdrawal: " + withdrawal); // Debugging
-
-        try {
-            // ✅ Validate withdrawal amount
-            if (withdrawal.getWithdrawalAmount() == null || withdrawal.getWithdrawalAmount().compareTo(BigDecimal.ZERO) <= 0) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("❌ Error: Withdrawal amount must be greater than zero.");
-            }
-
-            // ✅ Ensure transaction date is set
-            withdrawal.setTransactionDateTime(LocalDateTime.now());
-
-            // ✅ Save withdrawal transaction
-            WithdrawalTransaction savedWithdrawal = withdrawalService.addNewWithdrawalTransaction(withdrawal);
-
-            System.out.println("✅ Withdrawal Created with ID: " + savedWithdrawal.getTransactionId()); // Debugging
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedWithdrawal);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("❌ Error adding withdrawal transaction: " + e.getMessage());
-        }
+    public ResponseEntity<String> addWithdrawal(@RequestBody WithdrawalTransaction withdrawal) {
+        withdrawalService.addNewWithdrawalTransaction(withdrawal);
+        return ResponseEntity.status(201).body("Withdrawal transaction created successfully.");
     }
 
-    // ✅ Links a withdrawal transaction to a bank account.
+    // ✅ Link withdrawal to a bank account
     @PutMapping("connect/{withdrawalId}/{bankAccountId}")
     public ResponseEntity<String> connectWithdrawalToBank(
             @PathVariable int withdrawalId,
             @PathVariable int bankAccountId) {
-
-        WithdrawalTransaction withdrawal = withdrawalService.getWithdrawalById(withdrawalId);
-        if (withdrawal == null) {
-            throw new WithdrawalTransactionNotFoundException("Withdrawal transaction with ID " + withdrawalId + " not found.");
-        }
-        withdrawalService.connectTransactionToBank(withdrawal, bankAccountId);
-        return ResponseEntity.ok("Withdrawal transaction successfully linked to bank account ID " + bankAccountId);
+        withdrawalService.connectTransactionToBank(withdrawalId, bankAccountId);
+        return ResponseEntity.ok("Withdrawal transaction linked to bank account successfully.");
     }
 
-    // ✅ Retrieves all withdrawals linked to a specific bank account.
+    // ✅ Get all withdrawals linked to a specific bank account
     @GetMapping("account/{accountId}")
     public ResponseEntity<List<WithdrawalTransaction>> getWithdrawalsByAccountId(@PathVariable int accountId) {
-        List<WithdrawalTransaction> withdrawals = withdrawalService.getWithdrawalsByAccountId(accountId);
-        if (withdrawals.isEmpty()) {
-            throw new WithdrawalTransactionNotFoundException("No withdrawal transactions found for account ID " + accountId);
-        }
-        return ResponseEntity.ok(withdrawals);
+        return ResponseEntity.ok(withdrawalService.getWithdrawalsByAccountId(accountId));
     }
 }

@@ -29,6 +29,11 @@ public class EmployeeService extends UserService {
     @Autowired
    private BankAccountService bankAccountService;
 
+    @Autowired
+    private BranchService branchService;
+
+
+
     // ✅ Get Employee by ID with Error Handling
     public Employee getEmployeeById(Long id) {
         return employeeRepository.findById(id)
@@ -272,6 +277,54 @@ public class EmployeeService extends UserService {
         bankAccountService.updateBankAccount(bankAccount);
     }
 
+    @Transactional
+    public void createBankAccountForCustomer(Long employeeId, Long customerId, int branchId, BankAccount bankAccount) {
+        // Validate employee existence
+        Employee employee = getEmployeeById(employeeId);
+
+        // Validate customer existence
+        Customer customer = customerService.getCustomerById(customerId);
+
+        // Validate branch existence
+        Branch branch = branchService.getBranchById(branchId);
+
+        // Ensure employee is authorized to create an account for the customer
+        boolean isAuthorized = employee.getBranches().contains(branch);
+        if (!isAuthorized) {
+            throw new IllegalStateException("Employee does not have permission to create a bank account for this customer.");
+        }
+
+        // Assign customer and branch to the bank account
+        bankAccount.setCustomer(customer);
+        bankAccount.setBranch(branch);
+        bankAccount.setStatus(BankAccountStatus.ACTIVE); // Activate account by default
+
+
+        // Save the bank account
+        bankAccountService.saveBankAccount(bankAccount);
+        this.addBankAccountToEmployee(employeeId, bankAccount);
+    }
+
+    @Transactional
+    public void deleteCustomerByEmployee(Long employeeId, Long customerId) {
+        // Ensure employee exists
+        Employee employee = getEmployeeById(employeeId);
+
+        // Ensure customer exists
+        Customer customer = customerService.getCustomerById(customerId);
+
+        // Ensure employee is assigned to at least one branch where the customer has an account
+        boolean isAuthorized = employee.getBranches().stream()
+                .anyMatch(branch -> branch.getBankAccounts().stream()
+                        .anyMatch(account -> account.getCustomer().getIdCode().equals(customerId)));
+
+        if (!isAuthorized) {
+            throw new IllegalStateException("Employee does not have permission to delete this customer.");
+        }
+
+        // Delete customer
+        customerService.deleteCustomer(customerId);
+    }
 
 
 
