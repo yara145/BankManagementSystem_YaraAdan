@@ -22,9 +22,6 @@ public class EmployeeService extends UserService {
     private EmployeeRepository employeeRepository;
 
     @Autowired
-    private BranchRepository branchRepository;
-
-    @Autowired
     private CustomerService customerService;
     @Autowired
    private BankAccountService bankAccountService;
@@ -95,8 +92,8 @@ public class EmployeeService extends UserService {
     @Transactional
     public void addBranchToEmployee(Long id, Branch branch) {
         Employee employee = getEmployeeById(id);
-        Branch existingBranch = branchRepository.findById(branch.getId())
-                .orElseThrow(() -> new IllegalStateException("Branch not found."));
+        Branch existingBranch = branchService.getBranchById(branch.getId());
+
 
         if (employee.getBranches().contains(existingBranch)) {
             throw new IllegalStateException("Employee is already assigned to this branch.");
@@ -110,8 +107,8 @@ public class EmployeeService extends UserService {
     @Transactional
     public void removeBranchFromEmployee(Long id, Branch branch) {
         Employee employee = getEmployeeById(id);
-        Branch existingBranch = branchRepository.findById(branch.getId())
-                .orElseThrow(() -> new IllegalStateException("Branch not found."));
+        Branch existingBranch = branchService.getBranchById(branch.getId());
+
 
         if (!employee.getBranches().contains(existingBranch)) {
             throw new IllegalStateException("Employee is not assigned to this branch.");
