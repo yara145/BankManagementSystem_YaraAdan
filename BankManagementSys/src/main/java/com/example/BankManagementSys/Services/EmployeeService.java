@@ -167,6 +167,10 @@ public class EmployeeService extends UserService {
         if (bankAccount.getStatus() == BankAccountStatus.SUSPENDED) {
             throw new IllegalStateException("Bank account is already suspended.");
         }
+        // ✅ Prevent susbending a closed account
+        if (bankAccount.getStatus() == BankAccountStatus.CLOSED) {
+            throw new IllegalStateException("Bank account is closed and it can not be susbended.");
+        }
 
         // ✅ Change status to SUSPENDED
         bankAccount.setStatus(BankAccountStatus.SUSPENDED);
@@ -198,6 +202,12 @@ public class EmployeeService extends UserService {
         // ✅ Prevent re-restricting an already restricted account
         if (bankAccount.getStatus() == BankAccountStatus.RESTRICTED) {
             throw new IllegalStateException("Bank account is already restricted.");
+        }
+
+
+        // ✅ Prevent restricting a closed account
+        if (bankAccount.getStatus() == BankAccountStatus.CLOSED) {
+            throw new IllegalStateException("Bank account is closed and it can not be restricted.");
         }
 
         // ✅ Change status to RESTRICTED
@@ -265,6 +275,10 @@ public class EmployeeService extends UserService {
         // ✅ Prevent re-activating an already active account
         if (bankAccount.getStatus() == BankAccountStatus.ACTIVE) {
             throw new IllegalStateException("Bank account is already active.");
+        }
+        // ✅ Prevent activating a closed account
+        if (bankAccount.getStatus() == BankAccountStatus.CLOSED) {
+            throw new IllegalStateException("Bank account is closed and it can not be activated.");
         }
 
         // ✅ Change status to ACTIVE
