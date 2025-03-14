@@ -5,7 +5,9 @@ import com.example.BankManagementSys.Services.DepositTransactionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/deposits")
@@ -31,9 +33,16 @@ public class DepositController {
 
     // ✅ Adds a new deposit transaction
     @PostMapping("add")
-    public ResponseEntity<String> addDeposit(@RequestBody DepositTransaction deposit) {
-        depositService.addNewDepositTransaction(deposit);
-        return ResponseEntity.status(201).body("Deposit transaction created successfully.");
+    public ResponseEntity<Map<String, Object>> addDeposit(@RequestBody DepositTransaction deposit) {
+        // Add the deposit transaction to the database
+        DepositTransaction savedTransaction = depositService.addNewDepositTransaction(deposit);
+
+        // Prepare the response with the transactionId
+        Map<String, Object> response = new HashMap<>();
+        response.put("transactionId", savedTransaction.getTransactionId());  // Return the transactionId
+
+        // Return the response with the transactionId
+        return ResponseEntity.status(201).body(response);
     }
 
     // ✅ Links a deposit transaction to a bank account

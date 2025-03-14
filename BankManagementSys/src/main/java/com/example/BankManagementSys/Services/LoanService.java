@@ -47,10 +47,10 @@ public class LoanService {
 
         // ✅ Validate Loan Amount
         if (loan.getLoanAmount() == null || loan.getLoanAmount().compareTo(minAmount) < 0) {
-            throw new TransactionAmountInvalidException("Loan amount must be at least " + minAmount);
+            throw new IllegalArgumentException("Loan amount must be at least " + minAmount);
         }
         if (loan.getLoanAmount().compareTo(maxAmount) > 0) {
-            throw new TransactionAmountInvalidException("Loan amount must not exceed " + maxAmount);
+            throw new IllegalArgumentException("Loan amount must not exceed " + maxAmount);
         }
 
         // ✅ Set Default Interest Rate (if not provided)

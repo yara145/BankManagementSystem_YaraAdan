@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.security.Security;
-
 @RestController
+
 public class SecurityController {
 
     @Autowired
     private SecurityService securityBL;
 
+    //  Existing Customer Login (No changes)
     @GetMapping("/login")
     public ResponseEntity<?> login(@RequestParam String username, @RequestParam String password) {
         try {
@@ -30,5 +30,6 @@ public class SecurityController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
+
 
 }

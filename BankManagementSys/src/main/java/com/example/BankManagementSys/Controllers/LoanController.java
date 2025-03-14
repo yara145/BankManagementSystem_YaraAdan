@@ -5,7 +5,9 @@ import com.example.BankManagementSys.Services.LoanService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/loans")
@@ -31,10 +33,19 @@ public class LoanController {
 
     // ✅ Adds a new loan
     @PostMapping("add")
-    public ResponseEntity<String> addLoan(@RequestBody Loan loan) {
-        loanService.addNewLoan(loan);
-        return ResponseEntity.status(201).body("Loan transaction created successfully.");
+    public ResponseEntity<Map<String, Object>> addLoan(@RequestBody Loan loan) {
+        // Add the loan to the database
+        Loan savedLoan = loanService.addNewLoan(loan);
+
+        // Prepare the response with the loanId
+        Map<String, Object> response = new HashMap<>();
+        response.put("loanId", savedLoan.getTransactionId());  // Return the loanId
+
+        // Return the response with the loanId
+        return ResponseEntity.status(201).body(response);
     }
+
+
 
     // ✅ Links a loan to a bank account
     @PutMapping("connect/{loanId}/{bankAccountId}")

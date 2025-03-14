@@ -23,7 +23,7 @@ public class OTPValidationController {
         String normalizedEmail = normalizeEmail(email);
         String trimmedOTP = otp.trim();
 
-        System.out.println("🔍 Validating OTP for: " + normalizedEmail);
+        System.out.println(" Validating OTP for: " + normalizedEmail);
         System.out.println("Provided OTP: " + trimmedOTP);
 
         if (!otpStorage.getOtpStore().containsKey(normalizedEmail)) {

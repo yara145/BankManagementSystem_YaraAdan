@@ -31,7 +31,7 @@ public class EmployeeController {
     @Autowired
     private BranchService branchService;
 
-    // ✅ Links an employee to a bank account.
+    //  Links an employee to a bank account.
     @PutMapping("connect/{employeeId}/bankAccount/{bankAccountId}")
     public ResponseEntity<String> connectEmployeeToBankAccount(
             @PathVariable Long employeeId,
@@ -49,14 +49,14 @@ public class EmployeeController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
-    // ✅ Get Employee ID by Username
+    //  Get Employee ID by Username
     @GetMapping("get/id/username/{username}")
     public ResponseEntity<Long> getEmployeeIdByUsername(@PathVariable String username) {
         return ResponseEntity.ok(employeeService.getEmployeeIdByUsername(username));
     }
 
 
-    // ✅ Removes an employee from a bank account.
+    //  Removes an employee from a bank account.
     @DeleteMapping("disconnect/{employeeId}/bankAccount/{bankAccountId}")
     public ResponseEntity<String> disconnectEmployeeFromBankAccount(
             @PathVariable Long employeeId,
@@ -75,7 +75,7 @@ public class EmployeeController {
         }
     }
 
-    // ✅ Links an employee to a branch.
+    //  Links an employee to a branch.
     @PutMapping("connect/{employeeId}/branch/{branchId}")
     public ResponseEntity<String> connectEmployeeToBranch(
             @PathVariable Long employeeId,
@@ -119,26 +119,26 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.getAllEmployees());
     }
 
-    // ✅ Get an employee by ID (with error handling)
+    //  Get an employee by ID (with error handling)
     @GetMapping("get/{id}")
     public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
         Employee employee = employeeService.getEmployeeById(id);
         return ResponseEntity.ok(employee);
     }
 
-    // ✅ Get an employee by username (with error handling)
+    //  Get an employee by username (with error handling)
     @GetMapping("get/username/{username}")
     public ResponseEntity<Employee> getEmployeeByUsername(@PathVariable String username) {
         return ResponseEntity.ok(employeeService.getEmployeeByUsername(username));
     }
 
-    // ✅ Create a new employee
+    //  Create a new employee
     @PostMapping("add")
     public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee) {
         return ResponseEntity.ok(employeeService.addNewEmployee(employee));
     }
 
-    // ✅ Update employee details (with error handling)
+    //  Update employee details (with error handling)
     @PutMapping("update/{id}")
     public ResponseEntity<String> updateEmployee(@PathVariable Long id, @RequestBody Employee updatedEmployee) {
         updatedEmployee.setIdCode(id);
@@ -146,7 +146,7 @@ public class EmployeeController {
         return ResponseEntity.ok("Employee updated successfully.");
     }
 
-    // ✅ Delete an employee (with error handling)
+    //  Delete an employee (with error handling)
     @DeleteMapping("delete/{id}")
     public ResponseEntity<String> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployeeAndCleanup(id);
@@ -228,10 +228,20 @@ public class EmployeeController {
     public ResponseEntity<String> deleteCustomerByEmployee(
             @PathVariable Long employeeId,
             @PathVariable Long customerId) {
-
-        employeeService.deleteCustomerByEmployee(employeeId, customerId);
-        return ResponseEntity.ok("✅ Customer deleted successfully, and their bank accounts were closed.");
+        try {
+            System.out.println("🔄 Received request to delete customer: " + customerId);
+            employeeService.deleteCustomerByEmployee(employeeId, customerId);
+            return ResponseEntity.ok("✅ Customer deleted successfully, and their bank accounts were closed.");
+        } catch (IllegalStateException e) {
+            System.err.println("❌ Business Logic Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("❌ " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("❌ Unexpected Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("❌ Internal Server Error: " + e.getMessage());
+        }
     }
+
 
     // ✅ Suspend a bank account by an authorized employee
     @PutMapping("{employeeId}/suspendBankAccount/{bankAccountId}")

@@ -40,12 +40,12 @@ public class CustomerService extends UserService {
             validateCustomerDetails(customer);
             // ✅ Set the join date to today
             customer.setJoinDate(new Date());
-            System.out.println("✅ Customer created successfully.");
+            System.out.println(" Customer created successfully.");
 
             return customerRepository.save(customer);
 
         } catch (IllegalArgumentException e) {
-            System.err.println("❌ Validation failed: " + e.getMessage());
+            System.err.println(" Validation failed: " + e.getMessage());
             throw e;
         }
     }
@@ -53,7 +53,7 @@ public class CustomerService extends UserService {
     @Transactional
     public Customer updateCustomer(Customer customer) {
         try {
-            return customerRepository.save(customer); // ✅ Return the updated customer
+            return customerRepository.save(customer); //  Return the updated customer
         } catch (DataIntegrityViolationException e) {
             Throwable rootCause = e.getRootCause();
             String errorMessage = "A record with the provided unique value already exists.";
@@ -76,7 +76,7 @@ public class CustomerService extends UserService {
         return this.customerRepository.findAll();
     }
 
-    // ✅ Get customer by ID
+    //  Get customer by ID
     public Customer getCustomerById(Long customerId) {
         return customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found with ID: " + customerId));
@@ -191,18 +191,18 @@ public class CustomerService extends UserService {
         Customer existingCustomer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer with ID " + customerId + " not found."));
 
-        // ✅ Step 1: Close all Bank Accounts
+        //  Step 1: Close all Bank Accounts
         for (BankAccount account : existingCustomer.getBankAccounts()) {
             account.setStatus(BankAccountStatus.CLOSED);
             account.setCustomer(null); // Unlink from the customer
             bankAccountService.updateBankAccount(account);
         }
 
-        // ✅ Step 2: Remove the link to bank accounts
+        // Step 2: Remove the link to bank accounts
         existingCustomer.getBankAccounts().clear();
         customerRepository.save(existingCustomer);
 
-        // ✅ Step 3: Delete the customer
+        // Step 3: Delete the customer
         customerRepository.delete(existingCustomer);
     }
 

@@ -13,4 +13,5 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class LoginData {
     private String token;
+    private String role;
 }

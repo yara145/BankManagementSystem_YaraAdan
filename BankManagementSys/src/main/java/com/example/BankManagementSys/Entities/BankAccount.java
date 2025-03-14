@@ -48,7 +48,7 @@ public class BankAccount implements Serializable {
     private Branch branch;
 
     @JoinColumn(name = "customer_id")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @ToString.Exclude
     @JsonBackReference(value = "bankAccount-customer") // ✅ Unique name added
     private Customer customer;

@@ -38,25 +38,25 @@ public class OTPController {
     public ResponseEntity<String> generateOTP(
             @RequestParam String email,
             @RequestParam String userName,
-            @RequestParam String firstName,  // ✅ Added firstName
+            @RequestParam String firstName,  //  Added firstName
             @RequestParam String birthdate,
             @RequestParam String password) {
         try {
-            // ✅ Normalize email
+            //  Normalize email
             String normalizedEmail = normalizeEmail(email);
 
-            // ✅ Create a temporary customer object for validation
+            //  Create a temporary customer object for validation
             Customer tempCustomer = new Customer();
             tempCustomer.setEmail(normalizedEmail);
             tempCustomer.setUserName(userName);
-            tempCustomer.setName(firstName);  // ✅ Set firstName
+            tempCustomer.setName(firstName);  // Set firstName
             tempCustomer.setBirthdate(Date.valueOf(birthdate));
             tempCustomer.setPassword(password);
 
-            // ✅ Validate full user details
+            //  Validate full user details
             customerService.validateCustomerDetails(tempCustomer);
 
-            // ✅ If all checks pass, generate OTP
+            //  If all checks pass, generate OTP
             String otp = OTPGenerator.generateOTP(6);
             long validityInMillis = 5 * 60 * 1000; // 5 minutes
 
